@@ -1,5 +1,5 @@
-// This code is not perfect
-// made in 2026
+// Copyright (c) 2026-present The Ronite developers
+// craete in 2026
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserProvider, Contract, JsonRpcProvider, parseEther, formatEther } from "ethers";
