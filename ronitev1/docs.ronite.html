@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ronite Miner — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f13;
+    --bg2: #16161e;
+    --bg3: #1e1e2a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --text3: #5a5a72;
+    --accent: #7F77DD;
+    --accent-light: rgba(127,119,221,0.12);
+    --accent-border: rgba(127,119,221,0.35);
+    --teal: #1D9E75;
+    --teal-light: rgba(29,158,117,0.12);
+    --amber: #EF9F27;
+    --amber-light: rgba(239,159,39,0.12);
+    --blue: #378ADD;
+    --blue-light: rgba(55,138,221,0.12);
+    --coral: #D85A30;
+    --green: #5DCAA5;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,19,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: .02em; }
+  .brand i { color: var(--accent); font-size: 20px; }
+  .topbar-badges { display: flex; gap: 6px; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    padding: 1.5rem 1rem;
+    border-right: 0.5px solid var(--border);
+    position: sticky; top: 56px; height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    color: var(--text3); text-transform: uppercase;
+    padding: 0 8px; margin-bottom: 6px; margin-top: 1rem;
+  }
+  .sidebar-label:first-child { margin-top: 0; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 10px;
+    border: none; border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer;
+    font-size: 13px; color: var(--text2); font-family: 'Inter', sans-serif;
+    transition: all .15s; text-align: left;
+  }
+  .nav-btn i { font-size: 16px; flex-shrink: 0; }
+  .nav-btn:hover { background: var(--bg3); color: var(--text); }
+  .nav-btn.active { background: var(--accent-light); color: var(--accent); border: 0.5px solid var(--accent-border); }
+
+  /* ── Main content ── */
+  .main { flex: 1; padding: 2rem 2.5rem; max-width: 820px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Hero ── */
+  .hero { padding-bottom: 2rem; border-bottom: 0.5px solid var(--border); margin-bottom: 2rem; }
+  .hero h1 { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+  .hero h1 i { color: var(--accent); font-size: 22px; vertical-align: -3px; margin-right: 8px; }
+  .hero p { font-size: 14px; color: var(--text2); line-height: 1.8; max-width: 600px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-purple { background: rgba(127,119,221,0.15); color: #a9a3f5; border: 0.5px solid rgba(127,119,221,0.3); }
+  .badge-teal   { background: rgba(29,158,117,0.15);  color: #4ecda0; border: 0.5px solid rgba(29,158,117,0.3); }
+  .badge-amber  { background: rgba(239,159,39,0.15);  color: #f2b84b; border: 0.5px solid rgba(239,159,39,0.3); }
+  .badge-blue   { background: rgba(55,138,221,0.15);  color: #6aabf7; border: 0.5px solid rgba(55,138,221,0.3); }
+  .badge-coral  { background: rgba(216,90,48,0.15);   color: #f08060; border: 0.5px solid rgba(216,90,48,0.3); }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 15px; font-weight: 600;
+    margin-bottom: 1rem; margin-top: 1.75rem;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text);
+  }
+  .section-title:first-child { margin-top: 0; }
+  .section-title i { color: var(--accent); font-size: 18px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card h3 { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .card p  { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+
+  /* ── Steps ── */
+  .step-row { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-light); color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; border: 0.5px solid var(--accent-border);
+  }
+  .step-body { flex: 1; padding-top: 2px; }
+  .step-body h4 { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .step-body p  { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+  /* ── Learn blocks ── */
+  .learn-block {
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    padding: 1rem; margin-bottom: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .learn-block h3 { font-size: 14px; font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .learn-block h3 i { color: var(--accent); }
+  .learn-block p  { font-size: 13px; color: var(--text2); line-height: 1.7; }
+  .learn-block code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    padding: 1px 5px; border-radius: 4px; color: var(--accent);
+  }
+
+  /* ── Alert boxes ── */
+  .warn-box {
+    background: var(--amber-light); border: 0.5px solid rgba(239,159,39,0.3);
+    border-radius: var(--radius-sm); padding: .8rem 1rem;
+    font-size: 13px; color: #f2b84b; margin-bottom: 1rem; line-height: 1.65;
+  }
+  .info-box {
+    background: var(--blue-light); border: 0.5px solid rgba(55,138,221,0.3);
+    border-radius: var(--radius-sm); padding: .8rem 1rem;
+    font-size: 13px; color: #6aabf7; margin-bottom: 1rem; line-height: 1.65;
+  }
+
+  /* ── Ore cards ── */
+  .ore-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 1rem;
+  }
+  .ore-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ore-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; padding: 5px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .ore-stat:last-child { border-bottom: none; }
+  .ore-stat .label { color: var(--text2); }
+  .ore-stat .val   { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; }
+
+  /* ── Code block ── */
+  .code-block {
+    background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--accent);
+    margin-bottom: 10px; overflow-x: auto;
+  }
+
+  /* ── Contract rows ── */
+  .contract-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+  }
+  .contract-row:last-child { border-bottom: none; }
+  .contract-name { font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .contract-name i { color: var(--accent); }
+  .contract-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text2);
+  }
+  .contract-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    text-decoration: none; border-bottom: 0.5px dashed var(--accent-border);
+    transition: color .15s;
+  }
+  .contract-link:hover { color: #a9a3f5; }
+
+  /* ── Roadmap ── */
+  .roadmap-item { display: flex; gap: 16px; margin-bottom: 1.5rem; position: relative; }
+  .roadmap-item:not(:last-child)::after {
+    content: ""; position: absolute; left: 19px; top: 44px;
+    width: 1px; height: calc(100% - 4px); background: var(--border);
+  }
+  .road-dot {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; border: 0.5px solid var(--border); background: var(--bg2);
+  }
+  .road-dot.done   { background: rgba(29,158,117,0.15); border-color: rgba(93,202,165,0.4); }
+  .road-dot.active { background: var(--accent-light); border-color: var(--accent-border); }
+  .road-dot.soon   { background: var(--amber-light); border-color: rgba(239,159,39,0.3); }
+  .road-dot.future { background: var(--bg3); border-color: var(--border); }
+  .road-content { flex: 1; padding-top: 4px; }
+  .road-content h3 { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .road-content p  { font-size: 13px; color: var(--text2); line-height: 1.65; }
+  .road-q { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .q-done   { background: rgba(29,158,117,0.15); color: #4ecda0; }
+  .q-active { background: var(--accent-light); color: var(--accent); }
+  .q-soon   { background: var(--amber-light); color: var(--amber); }
+  .q-future { background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
+
+  /* ── FAQ ── */
+  .faq-item { border: 0.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; }
+  .faq-q {
+    padding: 12px 14px; cursor: pointer;
+    font-size: 14px; font-weight: 500;
+    display: flex; justify-content: space-between; align-items: center;
+    user-select: none; transition: background .15s;
+  }
+  .faq-q:hover { background: var(--bg3); }
+  .faq-q i { color: var(--text3); transition: transform .2s; font-size: 16px; flex-shrink: 0; margin-left: 8px; }
+  .faq-a {
+    font-size: 13px; color: var(--text2); line-height: 1.7;
+    padding: 0 14px; max-height: 0; overflow: hidden;
+    transition: max-height .3s, padding .2s;
+  }
+  .faq-a.open { max-height: 300px; padding: 0 14px 14px; }
+
+  /* ── Cat status ── */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .cat-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 1rem;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .cat-icon { font-size: 24px; flex-shrink: 0; }
+  .cat-info h4 { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .cat-info p  { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; padding: 2rem;
+    font-size: 12px; color: var(--text3);
+    border-top: 0.5px solid var(--border);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    .main { padding: 1.25rem; }
+    .mobile-nav {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .mobile-nav .nav-btn { flex: 1; min-width: 80px; justify-content: center; }
+  }
+  @media (min-width: 641px) { .mobile-nav { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="brand">
+    <i class="ti ti-pickaxe"></i>
+    RONITE MINER DOCS
+  </div>
+  <div class="topbar-badges">
+    <span class="badge badge-teal">Ronin Mainnet</span>
+    <span class="badge badge-purple">v1.0</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Getting started</div>
+    <button class="nav-btn active" onclick="showPage('overview',this)">
+      <i class="ti ti-home"></i> Overview
+    </button>
+    <button class="nav-btn" onclick="showPage('learn',this)">
+      <i class="ti ti-book"></i> How to Play
+    </button>
+
+    <div class="sidebar-label">Reference</div>
+    <button class="nav-btn" onclick="showPage('ores',this)">
+      <i class="ti ti-diamond"></i> Ores & Pools
+    </button>
+    <button class="nav-btn" onclick="showPage('contracts',this)">
+      <i class="ti ti-file-code"></i> Contracts
+    </button>
+
+    <div class="sidebar-label">Project</div>
+    <button class="nav-btn" onclick="showPage('roadmap',this)">
+      <i class="ti ti-map"></i> Roadmap
+    </button>
+    <button class="nav-btn" onclick="showPage('faq',this)">
+      <i class="ti ti-help-circle"></i> FAQ
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Mobile nav -->
+    <div class="mobile-nav">
+      <button class="nav-btn active" onclick="showPage('overview',this)"><i class="ti ti-home"></i></button>
+      <button class="nav-btn" onclick="showPage('learn',this)"><i class="ti ti-book"></i> Play</button>
+      <button class="nav-btn" onclick="showPage('ores',this)"><i class="ti ti-diamond"></i> Ores</button>
+      <button class="nav-btn" onclick="showPage('contracts',this)"><i class="ti ti-file-code"></i></button>
+      <button class="nav-btn" onclick="showPage('roadmap',this)"><i class="ti ti-map"></i></button>
+      <button class="nav-btn" onclick="showPage('faq',this)"><i class="ti ti-help-circle"></i> FAQ</button>
+    </div>
+
+    <!-- ═══════════════ OVERVIEW ═══════════════ -->
+    <div id="page-overview" class="page active">
+      <div class="hero">
+        <h1><i class="ti ti-pickaxe"></i>Ronite Miner</h1>
+        <p>A GameFi mining dapp built on Ronin mainnet. Stake RONITE tokens to mine ore, claim rewards every second, and sell ore back through the OreMarket — all on-chain.</p>
+        <div class="badges">
+          <span class="badge badge-purple">Ronin Mainnet</span>
+          <span class="badge badge-teal">Chain ID 2020</span>
+          <span class="badge badge-amber">v1.0</span>
+          <span class="badge badge-blue">Open Source</span>
+          <span class="badge badge-coral">ERC-20</span>
+        </div>
+      </div>
+
+      <p class="section-title"><i class="ti ti-layout-dashboard"></i> What is Ronite Miner?</p>
+      <div class="grid2">
+        <div class="card">
+          <h3><i class="ti ti-coin" style="color:var(--accent);margin-right:6px"></i>RONITE Token</h3>
+          <p>The primary staking token. Buy with RON at a fixed rate of 1 RON = 10 RONITE and use it as "mining power" in any ore pool.</p>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-pickaxe" style="color:var(--teal);margin-right:6px"></i>Mining Pools</h3>
+          <p>Four pools: COAL, IRON, GOLD, and DIAMOND. Stake RONITE to automatically earn ore rewards every second.</p>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-switch-2" style="color:var(--coral);margin-right:6px"></i>Ore Market</h3>
+          <p>Sell mined ore back for RONITE through the OreMarket contract. Each ore has its own exchange rate.</p>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-world" style="color:var(--blue);margin-right:6px"></i>Ronin Mainnet</h3>
+          <p>EVM-compatible gaming blockchain with near-zero gas fees and fast transaction finality — purpose-built for games.</p>
+        </div>
+      </div>
+
+      <p class="section-title"><i class="ti ti-chart-arrows"></i> Core flow</p>
+      <div class="step-row"><div class="step-num">1</div><div class="step-body"><h4>Buy RONITE</h4><p>Connect your Ronin wallet, pay RON, and receive RONITE instantly at 1 RON = 10 RONITE.</p></div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-body"><h4>Approve & stake</h4><p>Choose an ore pool, enter your RONITE amount, approve once, then stake. Mining starts immediately.</p></div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-body"><h4>Mining runs automatically</h4><p>Ore rewards accumulate every second, proportional to your share of the total pool.</p></div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-body"><h4>Claim or sell</h4><p>Click Claim to receive ore, or open the Sell tab to swap ore directly back to RONITE.</p></div></div>
+      <div class="step-row"><div class="step-num">5</div><div class="step-body"><h4>Withdraw anytime</h4><p>Unstake your RONITE back to your wallet with no lock periods or withdrawal penalties.</p></div></div>
+    </div>
+
+    <!-- ═══════════════ HOW TO PLAY ═══════════════ -->
+    <div id="page-learn" class="page">
+      <div class="hero">
+        <h1><i class="ti ti-book" style="color:var(--accent)"></i>How to Play</h1>
+        <p>A complete walkthrough from setting up your wallet to earning and selling ore rewards.</p>
+      </div>
+
+      <div class="learn-block">
+        <h3><i class="ti ti-wallet"></i>Step 1 — Wallet setup</h3>
+        <p>Install the <strong>Ronin Wallet</strong> browser extension or mobile app. Connect it to <strong>Ronin Mainnet</strong> (chain ID 2020). Make sure you have a RON balance to buy RONITE and pay gas fees on every transaction.</p>
+      </div>
+
+      <div class="learn-block">
+        <h3><i class="ti ti-coin"></i>Step 2 — Buy RONITE</h3>
+        <p>In the "Buy RONITE" section, enter how much RON you want to spend. The preview shows how many RONITE you'll receive. Click <code>Buy RONITE</code> and confirm the transaction. Fixed rate: <code>1 RON = 10 RONITE</code>.</p>
+      </div>
+
+      <div class="learn-block">
+        <h3><i class="ti ti-pickaxe"></i>Step 3 — Start mining</h3>
+        <p>Pick an ore pool and enter your RONITE amount in the Stake field. On your first stake per pool, click <code>Approve</code> to grant the contract permission — this is only required once. Then click <code>Stake</code> and mining starts immediately.</p>
+      </div>
+
+      <div class="learn-block">
+        <h3><i class="ti ti-arrow-down-circle"></i>Step 4 — Claim rewards</h3>
+        <p>Ore rewards appear in real time on each pool card. Click <code>Claim</code> on a specific pool, or use <code>Claim All</code> in the banner at the top to collect all pools at once (one transaction per pool).</p>
+      </div>
+
+      <div class="learn-block">
+        <h3><i class="ti ti-currency-dollar"></i>Step 5 — Sell ore</h3>
+        <p>Open the <code>Sell</code> tab on any pool card. Enter how much ore you want to sell — the preview shows estimated RONITE received. Selling requires two steps: <code>Approve</code> the ore token, then <code>Sell</code>. A minimum applies per transaction based on the ore's exchange rate.</p>
+      </div>
+
+      <div class="warn-box">
+        <i class="ti ti-alert-triangle" style="margin-right:6px"></i>
+        <strong>Important:</strong> Every action requires a wallet confirmation and a small amount of RON for gas. Make sure your RON balance doesn't run out mid-session.
+      </div>
+
+      <div class="info-box">
+        <i class="ti ti-info-circle" style="margin-right:6px"></i>
+        You don't need to unstake to claim rewards. Ore keeps accumulating as long as RONITE is staked and the mining period is active.
+      </div>
+    </div>
+
+    <!-- ═══════════════ ORES & POOLS ═══════════════ -->
+    <div id="page-ores" class="page">
+      <div class="hero">
+        <h1><i class="ti ti-diamond" style="color:var(--accent)"></i>Ores & Pools</h1>
+        <p>Four ore pools with different rarity tiers and exchange rates. Higher rarity means fewer ore needed to earn RONITE.</p>
+      </div>
+
+      <p class="section-title"><i class="ti ti-table"></i> Pool comparison</p>
+      <div class="grid2">
+        <div class="ore-card">
+          <h3>🪨 COAL <span class="badge badge-purple" style="font-size:10px">Common</span></h3>
+          <div class="ore-stat"><span class="label">Rarity</span><span class="val">Common ⬜</span></div>
+          <div class="ore-stat"><span class="label">Sell rate</span><span class="val">1000 COAL = 1 RONITE</span></div>
+          <div class="ore-stat"><span class="label">Min sell</span><span class="val">1,000 COAL</span></div>
+          <div class="ore-stat"><span class="label">Best for</span><span class="val">Beginners</span></div>
+        </div>
+        <div class="ore-card">
+          <h3>⚙️ IRON <span class="badge badge-blue" style="font-size:10px">Uncommon</span></h3>
+          <div class="ore-stat"><span class="label">Rarity</span><span class="val">Uncommon 🟦</span></div>
+          <div class="ore-stat"><span class="label">Sell rate</span><span class="val">1000 IRON = 10 RONITE</span></div>
+          <div class="ore-stat"><span class="label">Min sell</span><span class="val">1,000 IRON</span></div>
+          <div class="ore-stat"><span class="label">Value</span><span class="val">10× vs COAL</span></div>
+        </div>
+        <div class="ore-card">
+          <h3>✨ GOLD <span class="badge badge-amber" style="font-size:10px">Rare</span></h3>
+          <div class="ore-stat"><span class="label">Rarity</span><span class="val">Rare 🟨</span></div>
+          <div class="ore-stat"><span class="label">Sell rate</span><span class="val">500 GOLD = 10 RONITE</span></div>
+          <div class="ore-stat"><span class="label">Min sell</span><span class="val">500 GOLD</span></div>
+          <div class="ore-stat"><span class="label">Value</span><span class="val">20× vs COAL</span></div>
+        </div>
+        <div class="ore-card">
+          <h3>💎 DIAMOND <span class="badge badge-teal" style="font-size:10px">Legendary</span></h3>
+          <div class="ore-stat"><span class="label">Rarity</span><span class="val">Legendary 💎</span></div>
+          <div class="ore-stat"><span class="label">Sell rate</span><span class="val">100 DIAMOND = 1 RONITE</span></div>
+          <div class="ore-stat"><span class="label">Min sell</span><span class="val">100 DIAMOND</span></div>
+          <div class="ore-stat"><span class="label">Value</span><span class="val">Highest tier</span></div>
+        </div>
+      </div>
+
+      <p class="section-title"><i class="ti ti-calculator"></i> Reward formula</p>
+      <div class="card">
+        <h3>How daily rewards are estimated</h3>
+        <p style="margin-bottom:10px">Your daily reward depends on your share of the total pool:</p>
+        <div class="code-block">est/day = (yourStake / totalStake) × rewardRate × 86400</div>
+        <p>This value changes dynamically as other miners enter or leave. A larger share = more ore per day. The live reward counter in the UI updates every second.</p>
+      </div>
+
+      <p class="section-title"><i class="ti ti-cat"></i> Pixel cat status</p>
+      <div class="cat-grid">
+        <div class="cat-card"><div class="cat-icon">⚒</div><div class="cat-info"><h4>Mining</h4><p>Staked > 0 and mining period is active. Cat swings a pickaxe with ore flying off.</p></div></div>
+        <div class="cat-card"><div class="cat-icon">💰</div><div class="cat-info"><h4>Claim!</h4><p>Pending rewards exist but mining isn't active. Cat holds a coin bag.</p></div></div>
+        <div class="cat-card"><div class="cat-icon">😴</div><div class="cat-info"><h4>Idle</h4><p>No stake and no rewards. Cat sleeps with Zzz floating overhead.</p></div></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CONTRACTS ═══════════════ -->
+    <div id="page-contracts" class="page">
+      <div class="hero">
+        <h1><i class="ti ti-file-code" style="color:var(--accent)"></i>Smart Contracts</h1>
+        <p>All contracts are deployed and live on Ronin Mainnet. Click any address to view on Ronin Explorer.</p>
+      </div>
+
+      <div class="info-box">
+        <i class="ti ti-info-circle" style="margin-right:6px"></i>
+        Deployed on <strong>Ronin Mainnet (chain ID 2020)</strong> · verifiable on <a href="https://app.roninchain.com" target="_blank" style="color:#6aabf7">Ronin Explorer</a>.
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-coin" style="color:var(--accent);margin-right:6px"></i>RoniteToken.sol</h3>
+        <p style="margin-bottom:10px">The primary ERC-20 staking token. New RONITE is minted when a user calls <code>buy()</code> and pays RON. Fixed mint rate: 1 RON = 10 RONITE.</p>
+        <div class="contract-row">
+          <span class="contract-name"><i class="ti ti-coin"></i> RONITE Token</span>
+          <a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xBDdaae71919EAB4acd83C82526bfAf3E73a9f8bF" target="_blank">0xBDda…f8bF</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-coin" style="color:var(--teal);margin-right:6px"></i>RewardToken.sol</h3>
+        <p style="margin-bottom:10px">Reusable ERC-20 template for each ore type. Each ore has its own deployed instance, minted by MiningStaking when rewards are claimed.</p>
+        <div class="contract-row"><span class="contract-name">🪨 COAL reward</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xBeB1b790291C5593CD146D1f68E2aC21D4377fA0" target="_blank">0xBeB1…7fA0</a></div>
+        <div class="contract-row"><span class="contract-name">⚙️ IRON reward</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x45059f27ecCDE9Df402aC293456bDeC871EF69a7" target="_blank">0x4505…69a7</a></div>
+        <div class="contract-row"><span class="contract-name">✨ GOLD reward</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xAb97d54BC37d97Ae472Ae970E406336A312A12A6" target="_blank">0xAb97…2A6</a></div>
+        <div class="contract-row"><span class="contract-name">💎 DIAMOND reward</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x6Cc09B67f2d66d3489c2ea105d0A87Ea3aeF3cDd" target="_blank">0x6Cc0…3cDd</a></div>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-pickaxe" style="color:var(--amber);margin-right:6px"></i>MiningStaking.sol</h3>
+        <p style="margin-bottom:10px">One staking contract per pool. Accepts RONITE, tracks per-second rewards via <code>rewardRate</code>, and distributes ore on <code>getReward()</code>. Uses a Synthetix-style staking rewards model.</p>
+        <div class="contract-row"><span class="contract-name">🪨 COAL staking</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x28d39A0f0B751fa90EEe71416406211C31430623" target="_blank">0x28d3…0623</a></div>
+        <div class="contract-row"><span class="contract-name">⚙️ IRON staking</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x859935604AaC6F97601F761A7D61d9072fD45A8e" target="_blank">0x8599…5A8e</a></div>
+        <div class="contract-row"><span class="contract-name">✨ GOLD staking</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x79F2A99E4780F063DDE62580e80D0E1832441291" target="_blank">0x79F2…1291</a></div>
+        <div class="contract-row"><span class="contract-name">💎 DIAMOND staking</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x02A558Fa93046672aCb780AA4064a66ff5D78271" target="_blank">0x02A5…8271</a></div>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-switch-2" style="color:var(--coral);margin-right:6px"></i>OreMarket.sol</h3>
+        <p style="margin-bottom:10px">The ore-to-RONITE marketplace. Users approve their ore token, then call <code>sell()</code> to exchange at the configured rate. Rates are set per ore by the contract owner.</p>
+        <div class="contract-row"><span class="contract-name">🪨 COAL market</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0x6544D86D31AedE14a32645d7385CaDfA7EC2a9C7" target="_blank">0x6544…a9C7</a></div>
+        <div class="contract-row"><span class="contract-name">⚙️ IRON market</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xf90E81e3aF1fa0079C69829C66322493FfD73279" target="_blank">0xf90E…3279</a></div>
+        <div class="contract-row"><span class="contract-name">✨ GOLD market</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xCFc19Fd803F39b75E211C10ddD0722F165A886A6" target="_blank">0xCFc1…86A6</a></div>
+        <div class="contract-row"><span class="contract-name">💎 DIAMOND market</span><a class="contract-addr contract-link" href="https://app.roninchain.com/address/0xF968BFb3e25d19e1a5Ef99D81D8F53dc2a7B6697" target="_blank">0xF968…6697</a></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ROADMAP ═══════════════ -->
+    <div id="page-roadmap" class="page">
+      <div class="hero">
+        <h1><i class="ti ti-map" style="color:var(--accent)"></i>Roadmap</h1>
+        <p>What's been built, what's in progress, and what's coming next for Ronite Miner.</p>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot done"><i class="ti ti-check" style="color:#4ecda0;font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Contract foundation <span class="road-q q-done">Shipped</span></h3>
+          <p>Deployed RoniteToken, RewardToken (×4), MiningStaking (×4), and OreMarket on Ronin mainnet. All contracts verified on Ronin Explorer.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot done"><i class="ti ti-check" style="color:#4ecda0;font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Frontend v1 <span class="road-q q-done">Shipped</span></h3>
+          <p>React + Vite UI with Ronin wallet connection, live reward counter, interactive pool cards, pixel cat scene, and ore sell tab.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot active"><i class="ti ti-loader" style="color:var(--accent);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Security audit <span class="road-q q-active">In progress</span></h3>
+          <p>Internal audit of all contracts — reviewing reward distribution logic, owner access control, and reentrancy vectors. Report targeted in 2 weeks.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot active"><i class="ti ti-loader" style="color:var(--accent);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Leaderboard & analytics <span class="road-q q-active">Q3 2026</span></h3>
+          <p>Live leaderboard for top miners per pool, total ore mined stats, daily rankings, and on-chain achievement badges.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot soon"><i class="ti ti-clock" style="color:var(--amber);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>NFT pickaxes <span class="road-q q-soon">Q4 2026</span></h3>
+          <p>Tiered NFT pickaxes (Wood → Stone → Iron → Diamond) that provide reward multiplier bonuses when staked alongside RONITE. Mintable with RONITE or RON.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot future"><i class="ti ti-star" style="color:var(--text3);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Crafting system <span class="road-q q-future">Q1 2027</span></h3>
+          <p>Combine ores to craft rare items: IRON + COAL → Steel Bar, GOLD + DIAMOND → Crown of the Miner. Crafted items listable on the Ronin NFT marketplace.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot future"><i class="ti ti-star" style="color:var(--text3);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>DAO governance <span class="road-q q-future">Q2 2027</span></h3>
+          <p>On-chain voting for reward rates, new ore pools, and OreMarket parameters. RONITE holders get proportional voting power.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="road-dot future"><i class="ti ti-world" style="color:var(--text3);font-size:16px"></i></div>
+        <div class="road-content">
+          <h3>Mobile app <span class="road-q q-future">2027</span></h3>
+          <p>Native iOS & Android app with push notifications when rewards are ready and direct Ronin Wallet SDK integration.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <div id="page-faq" class="page">
+      <div class="hero">
+        <h1><i class="ti ti-help-circle" style="color:var(--accent)"></i>FAQ</h1>
+        <p>Answers to the most common questions about Ronite Miner.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Can I sell RONITE back for RON? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">Not directly through this dapp. RONITE is used to mine ore, which can then be sold back to RONITE via the OreMarket. Secondary market trading on DEXes like Katana may be available depending on liquidity.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is there any risk of losing my staked RONITE? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">Staked RONITE remains locked in the contract and can be withdrawn at any time with no penalty. Main risks are smart contract bugs (contracts are under audit) and RON price volatility. Always consider DeFi risks before participating.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Why do staking and selling require two transactions? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">This is the standard ERC-20 security pattern. The first transaction (Approve) grants the contract permission to spend your tokens. The second transaction (Stake or Sell) executes the action. Approval is only required once per token per contract.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Why aren't my rewards increasing? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">Likely causes: (1) The mining period has ended — check "Period ends" on the pool card. (2) Your stake transaction hasn't been confirmed yet. (3) Your staked RONITE balance is 0. Refresh the page and verify your transaction on Ronin Explorer.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Can I stake in multiple pools at the same time? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">Yes! You can stake RONITE across all four pools simultaneously. Each pool is fully independent — rewards and balances are tracked separately. A common strategy is to diversify based on risk appetite and desired ore type.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is there a minimum stake amount? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">No enforced minimum at the contract level. That said, your stake should justify the gas cost per transaction. Ronin gas fees are very low — typically under $0.01 — so even small stakes are economical.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How do I get RON to get started? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">RON can be purchased on Katana DEX (Ronin's native exchange) or on centralized exchanges like Binance, then bridged to Ronin. You can also use the Ronin Bridge to move ETH or other assets from Ethereum to the Ronin network.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is the source code open source? <i class="ti ti-chevron-down"></i></div>
+        <div class="faq-a">Yes. All .sol files (RoniteToken, RewardToken, MiningStaking, OreMarket) are publicly available and verifiable on Ronin Explorer. The frontend is also open source in this repository.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer">
+  Copyright © Ronite Miner · Built on Ronin Mainnet · Chain ID 2020
+</footer>
+
+<script>
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleFaq(el) {
+  const a = el.nextElementSibling;
+  const icon = el.querySelector('i');
+  const isOpen = a.classList.contains('open');
+  document.querySelectorAll('.faq-a.open').forEach(x => {
+    x.classList.remove('open');
+    x.previousElementSibling.querySelector('i').style.transform = 'rotate(0deg)';
+  });
+  if (!isOpen) { a.classList.add('open'); icon.style.transform = 'rotate(180deg)'; }
+}
+</script>
+</body>
+</html>
