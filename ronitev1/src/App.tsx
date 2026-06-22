@@ -1,9 +1,66 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMining } from "./hooks/useMining";
 import { formatTokenAmount, formatTokenAmountPrecise, formatDuration, shortenAddress } from "./lib/format";
 import type { PoolState } from "./hooks/useMining";
 import { PixelCatScene } from "./Pixelcatscene";
 import { ORE_ICON } from "./Oreicons";
+
+// ── Error Modal ────────────────────────────────────────────────────────────
+function ErrorModal({ message, onClose }: { message: string; onClose: () => void }) {
+  const isInsufficientFunds = /insufficient funds/i.test(message);
+  const isSellFailed        = /execution reverted/i.test(message) || /sell failed/i.test(message);
+  const isMarketPaused      = /paused/i.test(message);
+  const isInsufficientOre   = /minimum sell|notenoughore/i.test(message);
+  const isOutOfRonite       = /out of ronite/i.test(message);
+
+  const title = isInsufficientFunds
+    ? "⛽ Insufficient Funds"
+    : isMarketPaused
+    ? "⏸ Market Paused"
+    : isInsufficientOre
+    ? "⚖ Amount Too Low"
+    : isOutOfRonite
+    ? "🏦 Market Empty"
+    : isSellFailed
+    ? "❌ Transaction Reverted"
+    : "⚠ Transaction Error";
+
+  const hint = isInsufficientFunds
+    ? "Your wallet doesn't have enough RON to cover gas fees. Top up your RON balance and try again."
+    : isMarketPaused
+    ? "This ore market is currently paused by the admin. Check back later."
+    : isInsufficientOre
+    ? "You need to sell a larger amount to receive at least 1 RONITE. Check the minimum sell rate shown on the card."
+    : isOutOfRonite
+    ? "The market contract has run out of RONITE reserves. Contact the admin to refill it."
+    : isSellFailed
+    ? "The blockchain rejected this transaction. This usually means a contract condition wasn't met."
+    : "Something went wrong. Check your wallet and try again.";
+
+  // Shorten raw error for display
+  const rawSnippet = message.length > 120 ? message.slice(0, 120) + "…" : message;
+
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Transaction error">
+      <div className="modal-box">
+        <div className="modal-header">
+          <span className="modal-title">{title}</span>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="modal-body">
+          <p className="modal-hint">{hint}</p>
+          <div className="modal-raw">
+            <span className="modal-raw-label">Detail:</span>
+            <span className="modal-raw-text mono">{rawSnippet}</span>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn--primary" onClick={onClose}>OK, got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const RARITY_LABEL: Record<string, string> = {
   common: "⬜ Common", uncommon: "🟦 Uncommon", rare: "🟨 Rare", legendary: "💎 Legendary"
@@ -243,8 +300,17 @@ export default function App() {
   } = useMining();
 
   const [buyAmount, setBuyAmount] = useState("");
+  const [modalError, setModalError] = useState<string | null>(null);
   const roniteEst = buyAmount ? Number(buyAmount) * 10 : 0;
   const totalPending = pools.reduce((sum, p) => sum + p.pendingReward, 0n);
+
+  // Show modal whenever useMining sets an error
+  const prevError = useRef<string | null>(null);
+  if (error && error !== prevError.current) {
+    prevError.current = error;
+    // defer so React doesn't complain about state-during-render
+    Promise.resolve().then(() => setModalError(error));
+  }
 
   return (
     <div className="page">
@@ -335,7 +401,9 @@ export default function App() {
           ))}
         </section>
 
-        {error && <p className="error-banner">⚠ {error}</p>}
+        {modalError && (
+          <ErrorModal message={modalError} onClose={() => setModalError(null)} />
+        )}
       </main>
 
       <footer className="footer">Copyright Ronite 2026 · Built on Ronin mainnet · chain id 2020</footer>
