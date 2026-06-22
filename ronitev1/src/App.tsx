@@ -5,7 +5,6 @@ import type { PoolState } from "./hooks/useMining";
 import { PixelCatScene } from "./Pixelcatscene";
 import { ORE_ICON } from "./Oreicons";
 
-// ── Error Modal ────────────────────────────────────────────────────────────
 function ErrorModal({ message, onClose }: { message: string; onClose: () => void }) {
   const isInsufficientFunds = /insufficient funds/i.test(message);
   const isSellFailed        = /execution reverted/i.test(message) || /sell failed/i.test(message);
