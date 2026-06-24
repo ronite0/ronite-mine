@@ -1,5 +1,5 @@
 // Copyright (c) 2026-present The Ronite developers
-// craete in 2026
+// Create in 2026
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserProvider, Contract, JsonRpcProvider, parseEther, formatEther } from "ethers";
@@ -52,6 +52,9 @@ export function useMining() {
   const [pools, setPools]               = useState<PoolState[]>(makeInitialPools);
   const [roniteBalance, setRoniteBalance] = useState(0n);
   const [roniteAllowance, setRoniteAllowance] = useState<Record<string, bigint>>({});
+  const [ronBalance, setRonBalance]       = useState(0n);
+  const [roniteSupply, setRoniteSupply]   = useState(0n);
+  const [roniteMaxSupply, setRoniteMaxSupply] = useState(0n);
 
   const browserProviderRef = useRef<BrowserProvider | null>(null);
   const syncRef = useRef<Record<string, { pending: bigint; ts: number }>>({});
@@ -96,9 +99,28 @@ export function useMining() {
         ));
       } catch (e) { console.warn(`refreshNetwork ${pool.symbol}:`, e); }
     }
+
+    // RONITE global supply (public, no wallet needed)
+    if (RONITE_ADDRESS) {
+      try {
+        const ronite = new Contract(RONITE_ADDRESS, RONITE_ABI, readProvider);
+        const [supply, maxSup] = await Promise.all([
+          ronite.totalSupply(),
+          ronite.maxSupply(),
+        ]);
+        setRoniteSupply(supply);
+        setRoniteMaxSupply(maxSup);
+      } catch (e) { console.warn("refreshNetwork ronite supply:", e); }
+    }
   }, []);
 
   const refreshMiner = useCallback(async (addr: string) => {
+    // RON native balance
+    try {
+      const bal = await readProvider.getBalance(addr);
+      setRonBalance(bal);
+    } catch (e) { console.warn("refreshMiner ron balance:", e); }
+
     // RONITE balance
     if (RONITE_ADDRESS) {
       try {
@@ -340,6 +362,7 @@ export function useMining() {
   return {
     address, connecting, pendingAction, error,
     pools, roniteBalance, roniteAllowance,
+    ronBalance, roniteSupply, roniteMaxSupply,
     connect, buyRonite, approveRonite, stake, withdraw, claim, claimAll, sellOre,
   };
 }
