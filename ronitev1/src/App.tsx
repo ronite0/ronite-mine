@@ -1,10 +1,13 @@
 import { useState, useRef } from "react";
+import { formatUnits } from "ethers";
 import { useMining } from "./hooks/useMining";
 import { formatTokenAmount, formatTokenAmountPrecise, formatDuration, shortenAddress } from "./lib/format";
 import type { PoolState } from "./hooks/useMining";
+import { POOLS } from "./lib/chain";
 import { PixelCatScene } from "./Pixelcatscene";
 import { ORE_ICON } from "./Oreicons";
 
+// ── Error Modal ────────────────────────────────────────────────────────────
 function ErrorModal({ message, onClose }: { message: string; onClose: () => void }) {
   const isInsufficientFunds = /insufficient funds/i.test(message);
   const isSellFailed        = /execution reverted/i.test(message) || /sell failed/i.test(message);
@@ -88,6 +91,9 @@ function PoolCard({
   const [withdrawAmt, setWithdrawAmt] = useState("");
   const [sellAmt,     setSellAmt]     = useState("");
   const [activeTab,   setActiveTab]   = useState<"mine" | "sell">("mine");
+  const [showCA,      setShowCA]      = useState(false);
+
+  const poolConfig = POOLS.find(p => p.symbol === pool.symbol);
 
   const secondsLeft = Math.max(0, pool.periodFinish - Math.floor(Date.now() / 1000));
   const netShare = pool.totalStaked > 0n
@@ -165,6 +171,48 @@ function PoolCard({
         </div>
       </dl>
 
+      {/* ── Contract Addresses ──────────────────────────────────── */}
+      <div className="ca-section">
+        <button
+          className="ca-toggle"
+          onClick={() => setShowCA(v => !v)}
+          style={{ "--pool-color": pool.color } as React.CSSProperties}
+        >
+          <span className="ca-toggle-icon">{showCA ? "▼" : "▶"}</span>
+          <span>Contract Addresses</span>
+          <span className="ca-toggle-badge" style={{ background: pool.color }}>CA</span>
+        </button>
+        {showCA && poolConfig && (
+          <div className="ca-list">
+            {[
+              { label: "Pool Mining", addr: poolConfig.stakingAddress },
+              { label: "Ore Token",  addr: poolConfig.rewardTokenAddress },
+              { label: "Market",     addr: poolConfig.oreMarketAddress },
+            ].filter(r => !!r.addr).map(({ label, addr }) => (
+              <div className="ca-row" key={label}>
+                <span className="ca-label">{label}</span>
+                <div className="ca-addr-wrap">
+                  <a
+                    className="ca-addr mono"
+                    href={`https://explorer.roninchain.com/address/${addr}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={addr}
+                  >
+                    {addr!.slice(0, 6)}…{addr!.slice(-4)}
+                  </a>
+                  <button
+                    className="ca-copy"
+                    title="Copy address"
+                    onClick={() => navigator.clipboard.writeText(addr!)}
+                  >⧉</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Tab switcher */}
       <div className="card-tabs">
         <button
@@ -185,12 +233,20 @@ function PoolCard({
         <div className="pool-actions">
           {/* Stake */}
           <div className="field-row">
-            <input className="input" inputMode="decimal"
-              placeholder="RONITE amount"
-              value={stakeAmt}
-              onChange={e => setStakeAmt(e.target.value)}
-              disabled={!address}
-            />
+            <div className="input-with-max">
+              <input className="input" inputMode="decimal"
+                placeholder="RONITE amount"
+                value={stakeAmt}
+                onChange={e => setStakeAmt(e.target.value)}
+                disabled={!address}
+              />
+              <button
+                className="btn btn--max"
+                type="button"
+                disabled={!address || roniteBalance === 0n}
+                onClick={() => setStakeAmt(formatUnits(roniteBalance, 18))}
+              >MAX</button>
+            </div>
             {needsApproval ? (
               <button className="btn btn--accent"
                 onClick={() => onApprove(pool.symbol, stakeAmt)}
@@ -208,12 +264,20 @@ function PoolCard({
 
           {/* Withdraw */}
           <div className="field-row">
-            <input className="input" inputMode="decimal"
-              placeholder="Withdraw amount"
-              value={withdrawAmt}
-              onChange={e => setWithdrawAmt(e.target.value)}
-              disabled={!address}
-            />
+            <div className="input-with-max">
+              <input className="input" inputMode="decimal"
+                placeholder="Withdraw amount"
+                value={withdrawAmt}
+                onChange={e => setWithdrawAmt(e.target.value)}
+                disabled={!address}
+              />
+              <button
+                className="btn btn--max"
+                type="button"
+                disabled={!address || pool.staked === 0n}
+                onClick={() => setWithdrawAmt(formatUnits(pool.staked, 18))}
+              >MAX</button>
+            </div>
             <button className="btn"
               onClick={() => onWithdraw(pool.symbol, withdrawAmt)}
               disabled={!address || !withdrawAmt || !!pendingAction}>
@@ -254,12 +318,20 @@ function PoolCard({
           <div className="sell-input-group">
             <div className="buy-field" style={{ flex: 1 }}>
               <label className="buy-label">Amount to sell</label>
-              <input className="input" inputMode="decimal"
-                placeholder={`0.0 ${pool.symbol}`}
-                value={sellAmt}
-                onChange={e => setSellAmt(e.target.value)}
-                disabled={!address}
-              />
+              <div className="input-with-max">
+                <input className="input" inputMode="decimal"
+                  placeholder={`0.0 ${pool.symbol}`}
+                  value={sellAmt}
+                  onChange={e => setSellAmt(e.target.value)}
+                  disabled={!address}
+                />
+                <button
+                  className="btn btn--max"
+                  type="button"
+                  disabled={!address || (pool.oreBalance ?? 0n) === 0n}
+                  onClick={() => setSellAmt(formatUnits(pool.oreBalance ?? 0n, pool.rewardDecimals))}
+                >MAX</button>
+              </div>
             </div>
             <span className="buy-arrow">→</span>
             <div className="buy-field" style={{ flex: 1 }}>
@@ -283,7 +355,7 @@ function PoolCard({
 
           <p className="sell-disclaimer">
             ⚠ You trade {pool.symbol} tokens for RONITE at the listed rate.
-            Minimum: {rate} {pool.symbol} per transaction. Requires 2 signed transactions (approve + sell).
+            before selling {pool.symbol} you need Requires 2 signed transactions (approve + sell).
           </p>
         </div>
       )}
@@ -295,6 +367,7 @@ export default function App() {
   const {
     address, connecting, pendingAction, error,
     pools, roniteBalance, roniteAllowance,
+    ronBalance, roniteSupply, roniteMaxSupply,
     connect, buyRonite, approveRonite, stake, withdraw, claim, claimAll, sellOre,
   } = useMining();
 
@@ -325,7 +398,15 @@ export default function App() {
             <span className="status-dot status-dot--live" aria-hidden="true" />
             <span className="mono">{shortenAddress(address)}</span>
             <span className="chip-divider" />
-            <span className="mono">{formatTokenAmount(roniteBalance, 18)} RONITE</span>
+            <span className="mono chip-ron">
+              <span className="chip-token-label">RON</span>
+              {formatTokenAmount(ronBalance, 18, 3)}
+            </span>
+            <span className="chip-divider" />
+            <span className="mono chip-ronite">
+              <span className="chip-token-label">RONITE</span>
+              {formatTokenAmount(roniteBalance, 18)}
+            </span>
           </div>
         ) : (
           <button className="btn btn--primary" onClick={connect} disabled={connecting}>
@@ -336,6 +417,49 @@ export default function App() {
 
       <main className="content">
         <PixelCatScene pools={pools} />
+
+        {/* ── RONITE Supply Bar ──────────────────────────────────────── */}
+        {roniteMaxSupply > 0n && (() => {
+          const pct = Number((roniteSupply * 10000n) / roniteMaxSupply) / 100;
+          const minted    = formatTokenAmount(roniteSupply,    18, 0);
+          const maxSupply = formatTokenAmount(roniteMaxSupply, 18, 0);
+          return (
+            <section className="supply-bar-section">
+              <div className="supply-bar-header">
+                <span className="supply-bar-label">⛏ RONITE Supply</span>
+                <span className="supply-bar-nums mono">
+                  <span className="supply-minted">{minted}</span>
+                  <span className="supply-sep"> / </span>
+                  <span className="supply-max">{maxSupply}</span>
+                  <span className="supply-pct" style={{ marginLeft: 8 }}>({pct.toFixed(2)}%)</span>
+                </span>
+              </div>
+              <div className="supply-track">
+                <div
+                  className="supply-fill"
+                  style={{ width: `${Math.min(pct, 100)}%` }}
+                  role="progressbar"
+                  aria-valuenow={pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+                {/* milestone ticks */}
+                {[25, 50, 75].map(tick => (
+                  <div key={tick} className="supply-tick" style={{ left: `${tick}%` }} />
+                ))}
+              </div>
+              <div className="supply-bar-footer">
+                <span className="supply-remaining mono">
+                  {formatTokenAmount(roniteMaxSupply - roniteSupply, 18, 0)} RONITE remaining
+                </span>
+                <span className="supply-status" style={{ color: pct >= 90 ? "#f87171" : pct >= 60 ? "#fbbf24" : "#4ade80" }}>
+                  {pct >= 90 ? "🔴 Nearly Full" : pct >= 60 ? "🟡 Over Half" : "🟢 Plenty Left"}
+                </span>
+              </div>
+            </section>
+          );
+        })()}
+
         <section className="buy-section">
           <div className="buy-card">
             <div className="buy-info">
