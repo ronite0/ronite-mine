@@ -26,6 +26,25 @@ export interface PoolState {
   allowance:      bigint;
   // sell
   oreBalance:     bigint;
+  // lifetime
+  totalMined:     bigint;  // oreBalance + lifetime claimed (tracked locally)
+}
+
+// ── Lifetime claimed helpers (localStorage) ────────────────────────────────
+function claimedKey(addr: string, symbol: string) {
+  return `ronite_claimed_${addr.toLowerCase()}_${symbol}`;
+}
+function getLifetimeClaimed(addr: string, symbol: string): bigint {
+  try {
+    const v = localStorage.getItem(claimedKey(addr, symbol));
+    return v ? BigInt(v) : 0n;
+  } catch { return 0n; }
+}
+function addLifetimeClaimed(addr: string, symbol: string, amount: bigint) {
+  try {
+    const prev = getLifetimeClaimed(addr, symbol);
+    localStorage.setItem(claimedKey(addr, symbol), (prev + amount).toString());
+  } catch { /* ignore */ }
 }
 
 const readProvider = new JsonRpcProvider(
@@ -40,7 +59,7 @@ function makeInitialPools(): PoolState[] {
     totalStaked: 0n, rewardRate: 0n, periodFinish: 0,
     miningActive: false, rewardDecimals: 18,
     staked: 0n, pendingReward: 0n, liveReward: 0n, allowance: 0n,
-    oreBalance: 0n,
+    oreBalance: 0n, totalMined: 0n,
   }));
 }
 
@@ -141,9 +160,11 @@ export function useMining() {
         const staked        = await staking.stakedBalance(addr);
         const pendingReward = await staking.earned(addr);
         const oreBalance    = await rewardToken.balanceOf(addr);
+        const lifetimeClaimed = getLifetimeClaimed(addr, pool.symbol);
+        const totalMined    = oreBalance + lifetimeClaimed;
         syncRef.current[pool.symbol] = { pending: pendingReward, ts: Date.now() };
         setPools(prev => prev.map(p =>
-          p.symbol !== pool.symbol ? p : { ...p, staked, pendingReward, liveReward: pendingReward, oreBalance }
+          p.symbol !== pool.symbol ? p : { ...p, staked, pendingReward, liveReward: pendingReward, oreBalance, totalMined }
         ));
       } catch (e) { console.warn(`refreshMiner ${pool.symbol}:`, e); }
     }
@@ -262,20 +283,25 @@ export function useMining() {
 
   const claim = useCallback(async (poolSymbol: string) => {
     const pool = POOLS.find(p => p.symbol === poolSymbol);
-    if (!pool) return;
+    if (!pool || !address) return;
+    const poolState = pools.find(p => p.symbol === poolSymbol);
+    const pendingAmt = poolState?.pendingReward ?? 0n;
     const signer  = await getSigner();
     const staking = new Contract(pool.stakingAddress, MINING_STAKING_ABI, signer);
     await runAction(`claim-${poolSymbol}`, () => staking.getReward());
+    if (pendingAmt > 0n) addLifetimeClaimed(address, poolSymbol, pendingAmt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address]);
+  }, [address, pools]);
 
   const claimAll = useCallback(async () => {
     for (const pool of POOLS) {
       const poolState = pools.find(p => p.symbol === pool.symbol);
       if (!poolState || poolState.pendingReward === 0n) continue;
+      const pendingAmt = poolState.pendingReward;
       const signer  = await getSigner();
       const staking = new Contract(pool.stakingAddress, MINING_STAKING_ABI, signer);
       await runAction(`claim-${pool.symbol}`, () => staking.getReward());
+      if (address && pendingAmt > 0n) addLifetimeClaimed(address, pool.symbol, pendingAmt);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, pools]);
