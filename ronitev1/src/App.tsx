@@ -64,6 +64,241 @@ function ErrorModal({ message, onClose }: { message: string; onClose: () => void
   );
 }
 
+// ── Docs Modal ─────────────────────────────────────────────────────────────
+type DocsBlock =
+  | { type: "p";     text: string }
+  | { type: "steps"; items: { step: string; title: string; desc: string }[] }
+  | { type: "table"; headers: string[]; rows: string[][] }
+  | { type: "kv";    items: { key: string; value: string }[] }
+  | { type: "faq";   items: { q: string; a: string }[] };
+
+const DOCS_SECTIONS: { id: string; icon: string; title: string; content: DocsBlock[] }[] = [
+  {
+    id: "overview",
+    icon: "📖",
+    title: "Overview",
+    content: [
+      {
+        type: "p",
+        text: "RONITE Miner is a DeFi mining protocol built on the Ronin blockchain. Stake RONITE tokens across four mining pools to earn ore rewards — COAL, IRON, GOLD, and DIAMOND.",
+      },
+      {
+        type: "p",
+        text: "Each pool has its own rarity tier, reward rate, and ore market where you can exchange earned ore back into RONITE.",
+      },
+    ],
+  },
+  {
+    id: "howto",
+    icon: "⛏",
+    title: "How to Mine",
+    content: [
+      {
+        type: "steps",
+        items: [
+          { step: "1", title: "Connect Wallet", desc: "Click Connect Wallet in the top-right. Ronin Wallet is recommended. The app will auto-switch to Ronin mainnet (chain ID 2020)." },
+          { step: "2", title: "Buy RONITE", desc: "Use the Buy RONITE section. Fixed rate: 1 RON = 10 RONITE. RONITE is the staking token used across all pools." },
+          { step: "3", title: "Approve RONITE", desc: "Before staking in any pool, you must first approve the pool contract to spend your RONITE. This is a one-time transaction per pool." },
+          { step: "4", title: "Stake", desc: "Enter the amount of RONITE to stake in your chosen pool and click Stake. Use the MAX button to stake your full balance." },
+          { step: "5", title: "Earn Ore", desc: "Once staked, ore rewards accumulate in real time. The live counter updates every 200ms based on your share of the pool." },
+          { step: "6", title: "Claim Rewards", desc: "Click Claim on any pool to collect your ore tokens, or use Claim All to sweep all pools at once." },
+          { step: "7", title: "Sell Ore", desc: "Switch to the Sell tab on any pool card to exchange your ore for RONITE at the listed market rate. Requires 2 transactions: approve + sell." },
+        ],
+      },
+    ],
+  },
+  {
+    id: "pools",
+    icon: "🪨",
+    title: "Mining Pools",
+    content: [
+      {
+        type: "table",
+        headers: ["Pool", "Rarity", "Sell Rate", "Notes"],
+        rows: [
+          ["⬜ COAL",    "Common",    "1,000 COAL = 1 RONITE",    "Highest volume, easiest entry"],
+          ["🟦 IRON",    "Uncommon",  "100 IRON = 10 RONITE",     "Balanced risk/reward"],
+          ["🟨 GOLD",    "Rare",      "500 GOLD = 10 RONITE",     "Higher reward rate"],
+          ["💎 DIAMOND", "Legendary", "100 DIAMOND = 1 RONITE",   "Lowest supply, highest rarity"],
+        ],
+      },
+      {
+        type: "p",
+        text: "Pool rewards are distributed proportionally based on your staked RONITE relative to the total pool stake. Higher stake = higher share of rewards.",
+      },
+    ],
+  },
+  {
+    id: "tokenomics",
+    icon: "💎",
+    title: "Tokenomics",
+    content: [
+      {
+        type: "p",
+        text: "RONITE is the core staking token of the protocol. It has a fixed maximum supply enforced by the smart contract.",
+      },
+      {
+        type: "kv",
+        items: [
+          { key: "Buy Rate",    value: "1 RON = 10 RONITE (fixed)" },
+          { key: "Max Supply",  value: "Capped on-chain via maxSupply()" },
+          { key: "Minting",     value: "Only via buy() or ownerMint()" },
+          { key: "Ore Tokens",  value: "COAL, IRON, GOLD, DIAMOND — each an ERC-20 reward token" },
+          { key: "Ore Markets", value: "Each ore pool has a dedicated market contract holding RONITE reserves" },
+        ],
+      },
+      {
+        type: "p",
+        text: "The supply bar on the dashboard shows live minted vs max supply. Once max supply is reached, no new RONITE can be minted through the buy function.",
+      },
+    ],
+  },
+  {
+    id: "contracts",
+    icon: "📋",
+    title: "Contracts & Security",
+    content: [
+      {
+        type: "p",
+        text: "All contract addresses can be verified directly in the app. Each pool card has a collapsible Contract Addresses section with links to the Ronin Explorer.",
+      },
+      {
+        type: "kv",
+        items: [
+          { key: "Network",      value: "Ronin Mainnet — Chain ID 2020" },
+          { key: "Explorer",     value: "explorer.roninchain.com" },
+          { key: "RONITE Token", value: "ERC-20 + buy() + ownerMint()" },
+          { key: "Pool Mining",  value: "Staking contract per pool (stake / withdraw / getReward)" },
+          { key: "Ore Token",    value: "ERC-20 reward token per pool" },
+          { key: "Ore Market",   value: "sell() ore → RONITE at fixed rate" },
+        ],
+      },
+      {
+        type: "p",
+        text: "Always verify contract addresses on the explorer before interacting. Never share your seed phrase or private key with anyone.",
+      },
+    ],
+  },
+  {
+    id: "faq",
+    icon: "❓",
+    title: "FAQ",
+    content: [
+      {
+        type: "faq",
+        items: [
+          { q: "Why do I need 2 transactions to sell ore?", a: "The first transaction approves the market contract to spend your ore tokens (ERC-20 approval). The second executes the sell. This is standard ERC-20 behaviour." },
+          { q: "Why is mining not active on my pool?", a: "Each pool has a periodFinish timestamp. If the period has ended, no new rewards accumulate until the admin adds a new reward period." },
+          { q: "What happens if the market runs out of RONITE?", a: "The sell() call will revert with InsufficientRonite. The admin needs to deposit more RONITE into the market contract before selling resumes." },
+          { q: "Can I stake in multiple pools at once?", a: "Yes. Each pool is an independent contract. You can stake RONITE across all four pools simultaneously." },
+          { q: "Is there a minimum stake amount?", a: "No hard minimum on-chain, but very small amounts may earn negligible rewards depending on pool size." },
+          { q: "How is the live reward counter calculated?", a: "The frontend estimates accrual locally using your staked amount, pool reward rate, and time elapsed since last on-chain sync. The true value is confirmed on-chain when you claim." },
+        ],
+      },
+    ],
+  },
+];
+
+function DocsModal({ onClose }: { onClose: () => void }) {
+  const [activeSection, setActiveSection] = useState("overview");
+  const section = DOCS_SECTIONS.find(s => s.id === activeSection) ?? DOCS_SECTIONS[0];
+
+  return (
+    <div className="modal-overlay docs-overlay" role="dialog" aria-modal="true" aria-label="Documentation">
+      <div className="modal-box docs-box">
+        {/* Header */}
+        <div className="modal-header docs-header">
+          <span className="modal-title">📖 RONITE Miner — Docs</span>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        <div className="docs-layout">
+          {/* Sidebar nav */}
+          <nav className="docs-nav">
+            {DOCS_SECTIONS.map(s => (
+              <button
+                key={s.id}
+                className={`docs-nav-item ${activeSection === s.id ? "docs-nav-item--active" : ""}`}
+                onClick={() => setActiveSection(s.id)}
+              >
+                <span className="docs-nav-icon">{s.icon}</span>
+                <span>{s.title}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Content */}
+          <div className="docs-content">
+            <h3 className="docs-section-title">{section.icon} {section.title}</h3>
+            {section.content.map((block, i) => {
+              if (block.type === "p") {
+                return <p key={i} className="docs-p">{block.text}</p>;
+              }
+              if (block.type === "steps") {
+                return (
+                  <ol key={i} className="docs-steps">
+                    {block.items!.map(item => (
+                      <li key={item.step} className="docs-step">
+                        <span className="docs-step-num">{item.step}</span>
+                        <div>
+                          <strong className="docs-step-title">{item.title}</strong>
+                          <p className="docs-step-desc">{item.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                );
+              }
+              if (block.type === "table") {
+                return (
+                  <div key={i} className="docs-table-wrap">
+                    <table className="docs-table">
+                      <thead>
+                        <tr>{block.headers!.map(h => <th key={h}>{h}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {block.rows!.map((row, ri) => (
+                          <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              }
+              if (block.type === "kv") {
+                return (
+                  <dl key={i} className="docs-kv">
+                    {block.items!.map(item => (
+                      <div key={item.key} className="docs-kv-row">
+                        <dt className="docs-kv-key">{item.key}</dt>
+                        <dd className="docs-kv-val mono">{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                );
+              }
+              if (block.type === "faq") {
+                return (
+                  <div key={i} className="docs-faq">
+                    {block.items!.map(item => (
+                      <details key={item.q} className="docs-faq-item">
+                        <summary className="docs-faq-q">{item.q}</summary>
+                        <p className="docs-faq-a">{item.a}</p>
+                      </details>
+                    ))}
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 const RARITY_LABEL: Record<string, string> = {
   common: "⬜ Common", uncommon: "🟦 Uncommon", rare: "🟨 Rare", legendary: "💎 Legendary"
 };
@@ -169,6 +404,14 @@ function PoolCard({
           <dt>Sell rate</dt>
           <dd className="mono" style={{ color: pool.color }}>{rateLabel}</dd>
         </div>
+        {address && (
+          <div className="stat-row stat-row--highlight">
+            <dt>⛏ Total mined</dt>
+            <dd className="mono" style={{ color: pool.color }}>
+              {formatTokenAmount(pool.totalMined, pool.rewardDecimals)} {pool.symbol}
+            </dd>
+          </div>
+        )}
       </dl>
 
       {/* ── Contract Addresses ──────────────────────────────────── */}
@@ -373,6 +616,7 @@ export default function App() {
 
   const [buyAmount, setBuyAmount] = useState("");
   const [modalError, setModalError] = useState<string | null>(null);
+  const [showDocs, setShowDocs] = useState(false);
   const roniteEst = buyAmount ? Number(buyAmount) * 10 : 0;
   const totalPending = pools.reduce((sum, p) => sum + p.pendingReward, 0n);
 
@@ -393,7 +637,9 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">⛏</span>
           <span className="brand-name">RONITE MINER</span>
         </div>
-        {address ? (
+        <div className="topbar-right">
+          <button className="btn btn--docs" onClick={() => setShowDocs(true)}>📖 Docs</button>
+          {address ? (
           <div className="wallet-chip">
             <span className="status-dot status-dot--live" aria-hidden="true" />
             <span className="mono">{shortenAddress(address)}</span>
@@ -412,7 +658,8 @@ export default function App() {
           <button className="btn btn--primary" onClick={connect} disabled={connecting}>
             {connecting ? "Connecting…" : "Connect Wallet"}
           </button>
-        )}
+          )}
+        </div>
       </header>
 
       <main className="content">
@@ -504,6 +751,34 @@ export default function App() {
           </section>
         )}
 
+        {/* ── Total Ore Mined Summary ───────────────────────────────────── */}
+        {address && pools.some(p => p.totalMined > 0n) && (
+          <section className="ore-summary">
+            <div className="ore-summary-title">⛏ Total Ore Mined (All Time)</div>
+            <div className="ore-summary-grid">
+              {pools.map(pool => {
+                const OreIcon = ORE_ICON[pool.symbol];
+                return (
+                  <div key={pool.symbol} className="ore-summary-item" style={{ "--ore-color": pool.color } as React.CSSProperties}>
+                    <div className="ore-summary-icon">
+                      {OreIcon && <OreIcon size={22} />}
+                    </div>
+                    <div className="ore-summary-data">
+                      <span className="ore-summary-sym">{pool.symbol}</span>
+                      <span className="ore-summary-amount mono" style={{ color: pool.color }}>
+                        {formatTokenAmount(pool.totalMined, pool.rewardDecimals, 2)}
+                      </span>
+                      <span className="ore-summary-sub">
+                        wallet: {formatTokenAmount(pool.oreBalance, pool.rewardDecimals, 2)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ── Pool cards ───────────────────────────────────────────────── */}
         <section className="pools-grid">
           {pools.length === 0 ? (
@@ -526,6 +801,9 @@ export default function App() {
 
         {modalError && (
           <ErrorModal message={modalError} onClose={() => setModalError(null)} />
+        )}
+        {showDocs && (
+          <DocsModal onClose={() => setShowDocs(false)} />
         )}
       </main>
 
