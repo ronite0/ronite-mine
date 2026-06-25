@@ -351,7 +351,7 @@ function PoolCard({
   const sellEstRonite = sellAmt ? Number(sellAmt) / rate : 0;
   const RATE_LABEL: Record<string, string> = {
     COAL:    "1000 COAL = 1 RONITE",
-    IRON:    "1000 IRON = 10 RONITE",
+    IRON:    "100 IRON = 10 RONITE",
     GOLD:    "500 GOLD = 10 RONITE",
     DIAMOND: "100 DIAMOND = 1 RONITE",
   };
@@ -598,7 +598,7 @@ function PoolCard({
 
           <p className="sell-disclaimer">
             ⚠ You trade {pool.symbol} tokens for RONITE at the listed rate.
-            before selling {pool.symbol} you need Requires 2 signed transactions (approve + sell).
+            Requires 2 signed transactions (approve + sell).
           </p>
         </div>
       )}
