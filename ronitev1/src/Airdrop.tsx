@@ -1,14 +1,4 @@
-/**
- * AirdropPage.tsx — Halaman Airdrop Campaign
- *
- * Verifikasi on-chain NYATA:
- *   - buy      : balanceOf(RONITE) > 0
- *   - s_coal/iron/gold/diamond : stakedBalance(addr, pool) > 0
- *   - claim    : oreBalance(wallet) > 0 di salah satu pool
- *   - sell     : roniteBalance naik setelah konfirmasi (proxy: cek oreBalance vs cached)
- *
- * Navigasi via hash: window.location.hash = "#airdrop" / ""
- */
+
 
 import React, {
   useState, useEffect, useRef, useCallback,
