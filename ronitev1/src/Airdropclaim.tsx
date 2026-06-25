@@ -1,17 +1,4 @@
-/**
- * AirdropClaim.tsx — Halaman Claim Airdrop dari RoniteAirdrop.sol
- *
- * Terintegrasi penuh dengan:
- *   - lib/wallet.ts   → connectWallet(), getInjectedProvider()
- *   - lib/chain.ts    → RONIN_MAINNET, RONITE_ADDRESS
- *   - lib/format.ts   → shortenAddress(), formatTokenAmount()
- *
- * Env yang perlu ditambah ke .env:
- *   VITE_AIRDROP_CONTRACT_ADDRESS=0x...
- *
- * Navigasi:  window.location.hash = "#claim"
- * Kembali:   window.location.hash = ""  atau "#airdrop"
- */
+
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
@@ -24,7 +11,6 @@ import { shortenAddress, formatTokenAmount }    from "./lib/format";
 const AIRDROP_ADDR = import.meta.env.VITE_AIRDROP_CONTRACT_ADDRESS as string | undefined;
 const EXPLORER     = RONIN_MAINNET.blockExplorerUrls[0]; // "https://explorer.roninchain.com"
 
-/** ABI minimal RoniteAirdrop.sol — hanya fungsi yang dipakai frontend */
 const AIRDROP_ABI = [
   "function allocation(address wallet) view returns (uint256)",
   "function claimed(address wallet) view returns (bool)",
