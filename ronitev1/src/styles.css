@@ -30,11 +30,21 @@
   --font-mono:    'Press Start 2P', monospace;
   --shadow-pixel:    3px 3px 0px #000;
   --shadow-pixel-sm: 2px 2px 0px #000;
+
+  /* Touch-friendly sizes */
+  --touch-min:    44px;
+  --input-h:      42px;
 }
 
 * {
   box-sizing: border-box;
   image-rendering: pixelated;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -44,9 +54,10 @@ body {
   font-family: var(--font-body);
   font-size: 10px;
   line-height: 1.8;
+  overflow-x: hidden;
 }
 
-button { font-family: inherit; }
+button { font-family: inherit; touch-action: manipulation; }
 .mono  { font-family: var(--font-mono); }
 
 /* ── Layout ─────────────────────────────────────────── */
@@ -99,36 +110,49 @@ button { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 10px 16px;
   background: var(--surface);
   border-bottom: 4px solid var(--accent);
   box-shadow: 0 4px 0 #000;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .brand {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 8px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ore);
   text-shadow: 2px 2px 0 #000, -1px -1px 0 #7a4d00;
   letter-spacing: 0.05em;
 }
 .brand-mark { color: var(--ore); }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .wallet-chip {
-  display: flex; align-items: center; gap: 8px;
-  padding: 7px 13px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
   background: var(--surface-alt);
   border: 2px solid var(--accent);
   box-shadow: var(--shadow-pixel-sm);
   font-size: 7px;
   color: var(--ronin-sky);
   flex-wrap: wrap;
+  max-width: 100%;
 }
 .chip-divider {
   width: 2px; height: 12px;
   background: var(--border);
+  flex-shrink: 0;
 }
 
 /* token labels inside chip */
@@ -136,7 +160,7 @@ button { font-family: inherit; }
   font-size: 5.5px;
   letter-spacing: 0.1em;
   opacity: 0.6;
-  margin-right: 4px;
+  margin-right: 3px;
   text-transform: uppercase;
 }
 .chip-ron    { color: #60a5fa; }
@@ -147,7 +171,7 @@ button { font-family: inherit; }
   background: var(--surface-alt);
   border: 2px solid var(--border);
   box-shadow: var(--shadow-pixel-sm);
-  padding: 12px 16px 10px;
+  padding: 12px 14px 10px;
   margin-bottom: 16px;
 }
 .supply-bar-header {
@@ -176,7 +200,7 @@ button { font-family: inherit; }
 
 .supply-track {
   position: relative;
-  height: 10px;
+  height: 12px;
   background: var(--ronin-dark);
   border: 2px solid var(--border);
   box-shadow: inset 2px 2px 0 #000;
@@ -238,10 +262,10 @@ button { font-family: inherit; }
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
-  padding: 28px 24px 60px;
+  padding: 20px 16px 80px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* ── Pixel Cat Mining Scene ─────────────────────────── */
@@ -249,8 +273,8 @@ button { font-family: inherit; }
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 44px;
-  padding: 18px 24px 14px;
+  gap: 32px;
+  padding: 16px 16px 14px;
   background: var(--surface);
   border: 3px solid var(--border);
   box-shadow: var(--shadow-pixel);
@@ -360,16 +384,16 @@ button { font-family: inherit; }
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   background: var(--surface);
   border: 3px solid var(--border);
   border-left: 6px solid var(--ore);
   box-shadow: var(--shadow-pixel);
-  padding: 20px 22px;
+  padding: 18px 16px;
   flex-wrap: wrap;
 }
 
-.buy-info { flex: 1; min-width: 200px; }
+.buy-info { flex: 1; min-width: 160px; }
 .buy-title {
   font-family: var(--font-display);
   font-size: 9px;
@@ -385,16 +409,16 @@ button { font-family: inherit; }
 }
 .buy-desc strong { color: var(--ore); }
 
-.buy-form { flex: 2; min-width: 260px; }
+.buy-form { flex: 2; min-width: 240px; }
 
 .buy-input-group {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 10px;
   flex-wrap: wrap;
 }
-.buy-field { flex: 1; min-width: 110px; }
+.buy-field { flex: 1; min-width: 100px; }
 .buy-label {
   display: block;
   font-size: 6px;
@@ -406,6 +430,7 @@ button { font-family: inherit; }
   color: var(--accent);
   font-size: 1.1rem;
   padding-bottom: 6px;
+  flex-shrink: 0;
 }
 .buy-output {
   background: var(--ronin-dark);
@@ -414,7 +439,7 @@ button { font-family: inherit; }
   padding: 8px 11px;
   font-size: 8px;
   color: var(--ore);
-  min-height: 38px;
+  min-height: var(--input-h);
   display: flex;
   align-items: center;
   font-family: var(--font-mono);
@@ -440,12 +465,8 @@ button { font-family: inherit; }
 /* ── Pools grid ─────────────────────────────────────── */
 .pools-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 14px;
-}
-
-@media (max-width: 520px) {
-  .pools-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Pool card ──────────────────────────────────────── */
@@ -454,7 +475,7 @@ button { font-family: inherit; }
   border: 3px solid var(--border);
   border-top: 4px solid var(--pool-color, var(--accent));
   box-shadow: var(--shadow-pixel);
-  padding: 16px 18px;
+  padding: 14px 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -554,7 +575,7 @@ button { font-family: inherit; }
   background: var(--surface-alt);
   border: 2px solid var(--border);
   box-shadow: var(--shadow-pixel-sm);
-  padding: 12px 16px;
+  padding: 12px 14px;
   margin-bottom: 4px;
 }
 .ore-summary-title {
@@ -570,9 +591,6 @@ button { font-family: inherit; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-}
-@media (max-width: 600px) {
-  .ore-summary-grid { grid-template-columns: repeat(2, 1fr); }
 }
 .ore-summary-item {
   display: flex;
@@ -618,15 +636,16 @@ button { font-family: inherit; }
 .pool-actions {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 .field-row {
   display: flex;
   gap: 6px;
+  align-items: stretch;
 }
 
-/* MAX button wrapper — wraps an .input + .btn--max side by side */
+/* MAX button wrapper */
 .input-with-max {
   display: flex;
   flex: 1;
@@ -647,13 +666,16 @@ button { font-family: inherit; }
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.04em;
-  padding: 4px 7px;
+  padding: 4px 8px;
   cursor: pointer;
   white-space: nowrap;
   box-shadow: var(--shadow-pixel-sm);
   transition: transform 0.05s, box-shadow 0.05s;
   border-radius: 0;
   align-self: stretch;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
 }
 .btn--max:hover:not(:disabled) {
   background: rgba(250,204,21,0.25);
@@ -688,10 +710,11 @@ button { font-family: inherit; }
   background: var(--ronin-dark);
   border: 2px solid var(--border);
   box-shadow: inset 2px 2px 0 #000;
-  padding: 7px 10px;
+  padding: 0 10px;
+  height: var(--input-h);
   color: var(--ronin-sky);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 8px;
   border-radius: 0;
 }
 .input:focus-visible {
@@ -705,7 +728,9 @@ button { font-family: inherit; }
   border: 2px solid var(--border);
   background: var(--surface-alt);
   color: var(--text);
-  padding: 7px 13px;
+  padding: 0 14px;
+  height: var(--touch-min);
+  min-height: var(--touch-min);
   font-size: 7px;
   font-family: var(--font-mono);
   font-weight: 500;
@@ -773,7 +798,7 @@ button { font-family: inherit; }
 .footer {
   position: relative; z-index: 1;
   text-align: center;
-  padding: 16px 0 24px;
+  padding: 16px 12px 24px;
   color: var(--text-muted);
   font-size: 6px;
   border-top: 2px dashed var(--border);
@@ -792,7 +817,8 @@ button { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 8px 10px;
+  min-height: var(--touch-min);
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -825,7 +851,7 @@ button { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 10px;
+  padding: 6px 10px;
   gap: 8px;
   transition: background 0.1s;
 }
@@ -864,7 +890,8 @@ button { font-family: inherit; }
   border: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 8px;
-  padding: 1px 4px;
+  padding: 4px 7px;
+  min-height: 32px;
   cursor: pointer;
   line-height: 1;
   border-radius: 0;
@@ -884,12 +911,14 @@ button { font-family: inherit; }
   border: 2px solid var(--border);
   background: transparent;
   color: var(--text-muted);
-  padding: 6px 10px;
+  padding: 0 10px;
+  height: var(--touch-min);
   font-size: 6px;
   font-weight: 500;
   cursor: pointer;
   font-family: var(--font-mono);
   border-radius: 0;
+  flex: 1;
 }
 .tab-btn:hover { color: var(--text); border-color: var(--text-muted); }
 .tab-btn--active {
@@ -915,6 +944,7 @@ button { font-family: inherit; }
   align-items: baseline;
   gap: 10px;
   font-size: 7px;
+  flex-wrap: wrap;
 }
 .sell-info-label { color: var(--text-muted); }
 .sell-info-value {
@@ -930,7 +960,7 @@ button { font-family: inherit; }
   flex-wrap: wrap;
 }
 
-/* Red sell button - Ronin danger */
+/* Red sell button */
 .btn--sell {
   background: var(--danger);
   border-color: var(--danger);
@@ -944,6 +974,13 @@ button { font-family: inherit; }
   box-shadow: 4px 4px 0 #000;
 }
 
+/* sell disclaimer */
+.sell-disclaimer {
+  font-size: 6px;
+  color: var(--text-muted);
+  line-height: 2;
+  margin: 0;
+}
 
 /* ── Error Modal ────────────────────────────────────────── */
 .modal-overlay {
@@ -954,7 +991,7 @@ button { font-family: inherit; }
   align-items: center;
   justify-content: center;
   background: rgba(6, 9, 18, 0.88);
-  padding: 20px;
+  padding: 16px;
   animation: modal-fade-in 0.1s steps(2) forwards;
 }
 @keyframes modal-fade-in {
@@ -971,6 +1008,8 @@ button { font-family: inherit; }
   display: flex;
   flex-direction: column;
   animation: modal-slide-in 0.12s steps(3) forwards;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 @keyframes modal-slide-in {
   from { transform: translateY(10px); }
@@ -985,6 +1024,8 @@ button { font-family: inherit; }
   background: rgba(239, 68, 68, 0.12);
   border-bottom: 2px solid var(--danger);
   gap: 12px;
+  position: sticky;
+  top: 0;
 }
 .modal-title {
   font-family: var(--font-display);
@@ -999,11 +1040,14 @@ button { font-family: inherit; }
   color: var(--danger);
   font-family: var(--font-mono);
   font-size: 7px;
-  padding: 3px 7px;
+  padding: 6px 10px;
+  min-height: var(--touch-min);
   cursor: pointer;
   box-shadow: var(--shadow-pixel-sm);
   flex-shrink: 0;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 .modal-close-btn:hover {
   background: var(--danger);
@@ -1049,14 +1093,8 @@ button { font-family: inherit; }
   display: flex;
   justify-content: flex-end;
 }
-/* ── Topbar Right Group ──────────────────────────────────── */
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
 
+/* ── Docs button ──────────────────────────────────────── */
 .btn--docs {
   background: rgba(96,165,250,0.1);
   border: 2px solid #3b82f6;
@@ -1064,12 +1102,15 @@ button { font-family: inherit; }
   font-size: 7px;
   font-family: var(--font-mono);
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 0 12px;
+  height: var(--touch-min);
   cursor: pointer;
   box-shadow: var(--shadow-pixel-sm);
   transition: transform 0.05s, box-shadow 0.05s, background 0.1s;
   white-space: nowrap;
   border-radius: 0;
+  display: flex;
+  align-items: center;
 }
 .btn--docs:hover {
   background: rgba(96,165,250,0.22);
@@ -1084,7 +1125,7 @@ button { font-family: inherit; }
 /* ── Docs Modal ──────────────────────────────────────────── */
 .docs-overlay {
   align-items: flex-start;
-  padding: 16px;
+  padding: 12px;
 }
 
 .docs-box {
@@ -1092,7 +1133,7 @@ button { font-family: inherit; }
   box-shadow: 6px 6px 0 #000, 0 0 0 1px rgba(96,165,250,0.25) !important;
   max-width: 860px !important;
   width: 100%;
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - 24px);
   display: flex;
   flex-direction: column;
 }
@@ -1133,7 +1174,8 @@ button { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 12px;
+  padding: 10px 12px;
+  min-height: var(--touch-min);
   background: transparent;
   border: none;
   border-left: 3px solid transparent;
@@ -1161,7 +1203,7 @@ button { font-family: inherit; }
 .docs-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 22px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1226,12 +1268,14 @@ button { font-family: inherit; }
 /* Table */
 .docs-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .docs-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 6.5px;
   font-family: var(--font-mono);
+  min-width: 300px;
 }
 .docs-table th {
   background: rgba(96,165,250,0.12);
@@ -1267,7 +1311,7 @@ button { font-family: inherit; }
 }
 .docs-kv-row:last-child { border-bottom: none; }
 .docs-kv-key {
-  width: 130px;
+  width: 120px;
   flex-shrink: 0;
   padding: 6px 10px;
   font-size: 6.5px;
@@ -1283,6 +1327,7 @@ button { font-family: inherit; }
   font-size: 6.5px;
   color: var(--text);
   line-height: 1.9;
+  word-break: break-word;
 }
 
 /* FAQ */
@@ -1299,7 +1344,7 @@ button { font-family: inherit; }
   border-color: var(--accent);
 }
 .docs-faq-q {
-  padding: 8px 12px;
+  padding: 10px 12px;
   font-family: var(--font-mono);
   font-size: 7px;
   color: var(--text);
@@ -1309,6 +1354,7 @@ button { font-family: inherit; }
   align-items: center;
   gap: 8px;
   user-select: none;
+  min-height: var(--touch-min);
 }
 .docs-faq-q::before {
   content: "▶";
@@ -1329,8 +1375,116 @@ button { font-family: inherit; }
   padding-top: 8px;
 }
 
-/* Responsive docs */
-@media (max-width: 580px) {
+/* ── Fixed nav buttons (Router) ──────────────────────── */
+/* Float buttons stack nicely via bottom offset — see Router.tsx */
+
+/* ─────────────────────────────────────────────────────
+   RESPONSIVE — Mobile-first breakpoints
+   ───────────────────────────────────────────────────── */
+
+/* ≤ 480px  ──  compact mobile */
+@media (max-width: 480px) {
+  :root {
+    --input-h:   46px;
+    --touch-min: 46px;
+  }
+
+  body { font-size: 9px; }
+
+  .topbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .brand { font-size: 9px; gap: 6px; }
+  .topbar-right { gap: 6px; width: 100%; justify-content: flex-end; }
+
+  /* Wallet chip: stack RON + RONITE vertically on tiny screens */
+  .wallet-chip {
+    font-size: 6px;
+    gap: 4px;
+    padding: 5px 8px;
+    flex-wrap: wrap;
+  }
+  .chip-divider { display: none; }
+
+  .content { padding: 12px 10px 80px; gap: 12px; }
+
+  /* Pool grid full-width */
+  .pools-grid { grid-template-columns: 1fr; }
+
+  /* Ore summary 2-col on tiny */
+  .ore-summary-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Buy card stacks */
+  .buy-card { flex-direction: column; padding: 14px 12px; }
+  .buy-info { min-width: unset; }
+  .buy-form { min-width: unset; }
+  .buy-input-group { flex-direction: column; gap: 8px; }
+  .buy-arrow { display: none; }
+  .buy-field { flex: unset; width: 100%; }
+  .buy-output { min-height: var(--input-h); }
+
+  /* Field row: input + button side by side but allow wrap */
+  .field-row { flex-wrap: nowrap; }
+
+  /* Pool name smaller */
+  .pool-name { font-size: 8px; }
+
+  /* Sell input group stacks */
+  .sell-input-group { flex-direction: column; }
+
+  /* Cat scene smaller gap */
+  .pixel-cat-scene { gap: 18px; padding: 12px 8px 14px; }
+  .pixel-cat-svg { width: 44px; height: 44px; }
+
+  /* Claim-all bar stacks */
+  .claim-all-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* supply bar nums stacks */
+  .supply-bar-header { flex-direction: column; gap: 4px; }
+
+  /* docs layout becomes vertical */
+  .docs-layout { flex-direction: column; }
+  .docs-nav {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 2px solid var(--border);
+    padding: 4px;
+    gap: 2px;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  .docs-nav-item {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 8px;
+    min-height: 36px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .docs-nav-item--active {
+    border-bottom-color: var(--accent);
+    border-left-color: transparent;
+  }
+  .docs-box { max-height: calc(100vh - 16px); }
+  .docs-overlay { padding: 8px; }
+  .docs-content { padding: 14px 12px; }
+  .docs-kv-key { width: 90px; }
+}
+
+/* 481px – 768px  ──  tablet */
+@media (min-width: 481px) and (max-width: 768px) {
+  .pools-grid { grid-template-columns: 1fr; }
+  .ore-summary-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .buy-input-group { flex-wrap: wrap; }
+  .buy-arrow { display: none; }
+  .buy-field { flex: unset; width: 100%; }
+
+  .sell-input-group { flex-wrap: wrap; }
+
   .docs-layout { flex-direction: column; }
   .docs-nav {
     width: 100%;
@@ -1341,7 +1495,30 @@ button { font-family: inherit; }
     padding: 4px;
     gap: 2px;
   }
-  .docs-nav-item { border-left: none; border-bottom: 2px solid transparent; padding: 5px 8px; }
-  .docs-nav-item--active { border-bottom-color: var(--accent); border-left-color: transparent; }
-  .docs-box { max-height: calc(100vh - 16px); }
+  .docs-nav-item {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 10px;
+  }
+  .docs-nav-item--active {
+    border-bottom-color: var(--accent);
+    border-left-color: transparent;
+  }
+}
+
+/* 769px – 1024px  ──  small desktop / landscape tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pools-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ≥ 1025px  ──  full desktop (original 2-col layout) */
+@media (min-width: 1025px) {
+  .pools-grid { grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); }
+}
+
+/* Landscape phone */
+@media (max-width: 768px) and (orientation: landscape) {
+  .topbar { padding: 6px 16px; }
+  .content { padding: 10px 16px 70px; }
+  .pixel-cat-scene { padding: 10px 16px 12px; }
 }
