@@ -611,13 +611,11 @@ export default function App() {
     address, connecting, pendingAction, error,
     pools, roniteBalance, roniteAllowance,
     ronBalance, roniteSupply, roniteMaxSupply,
-    connect, buyRonite, approveRonite, stake, withdraw, claim, claimAll, sellOre,
+    connect, approveRonite, stake, withdraw, claim, claimAll, sellOre,
   } = useMining();
 
-  const [buyAmount, setBuyAmount] = useState("");
   const [modalError, setModalError] = useState<string | null>(null);
   const [showDocs, setShowDocs] = useState(false);
-  const roniteEst = buyAmount ? Number(buyAmount) * 10 : 0;
   const totalPending = pools.reduce((sum, p) => sum + p.pendingReward, 0n);
 
   // Show modal whenever useMining sets an error
@@ -706,38 +704,6 @@ export default function App() {
             </section>
           );
         })()}
-
-        <section className="buy-section">
-          <div className="buy-card">
-            <div className="buy-info">
-              <h2 className="buy-title">Buy RONITE</h2>
-              <p className="buy-desc">Staking token for all mining pools. Fixed rate <strong>1 RON = 10 RONITE</strong>.</p>
-            </div>
-            <div className="buy-form">
-              <div className="buy-input-group">
-                <div className="buy-field">
-                  <label className="buy-label">RON you pay</label>
-                  <input className="input" inputMode="decimal"
-                    placeholder="0.0"
-                    value={buyAmount}
-                    onChange={e => setBuyAmount(e.target.value)}
-                    disabled={!address}
-                  />
-                </div>
-                <span className="buy-arrow">→</span>
-                <div className="buy-field">
-                  <label className="buy-label">RONITE you receive</label>
-                  <div className="buy-output mono">{roniteEst > 0 ? roniteEst.toLocaleString() : "0"} RONITE</div>
-                </div>
-              </div>
-              <button className="btn btn--primary btn--wide"
-                onClick={() => buyRonite(buyAmount)}
-                disabled={!address || !buyAmount || !!pendingAction}>
-                {pendingAction === "buyRonite" ? "Processing…" : "Buy RONITE"}
-              </button>
-            </div>
-          </div>
-        </section>
 
         {/* ── Total pending + Claim All ────────────────────────────────── */}
         {address && totalPending > 0n && (
