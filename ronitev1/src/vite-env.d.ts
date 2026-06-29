@@ -19,6 +19,8 @@ interface ImportMetaEnv {
   readonly VITE_DIAMOND_MARKET_ADDRESS: string;
   // Airdrop Season 1
   readonly VITE_AIRDROP_CONTRACT_ADDRESS: string;
+  // Vesting
+  readonly VITE_VESTING_CONTRACT_ADDRESS: string;
 }
 
 interface ImportMeta {
