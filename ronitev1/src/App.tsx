@@ -240,7 +240,7 @@ function DocsModal({ onClose }: { onClose: () => void }) {
                     {block.items!.map(item => (
                       <li key={item.step} className="docs-step">
                         <span className="docs-step-num">{item.step}</span>
-                        <div>
+                        <div className="docs-step-body">
                           <strong className="docs-step-title">{item.title}</strong>
                           <p className="docs-step-desc">{item.desc}</p>
                         </div>
