@@ -3,14 +3,16 @@ import App from "./App";
 import { AirdropPage }      from "./Airdrop";
 import { AirdropClaimPage } from "./Airdropclaim";
 import { AirdropAdminPage } from "./Airdropadmin";
+import { VestingPage }      from "./Vesting";
 
-type Page = "mining" | "airdrop" | "claim" | "admin";
+type Page = "mining" | "airdrop" | "claim" | "admin" | "vesting";
 
 function getPage(): Page {
   const hash = window.location.hash.replace("#", "").split("?")[0].trim();
   if (hash === "airdrop") return "airdrop";
   if (hash === "claim")   return "claim";
   if (hash === "admin")   return "admin";
+  if (hash === "vesting") return "vesting";
   return "mining";
 }
 
@@ -26,10 +28,25 @@ export default function Router() {
   if (page === "airdrop") return <AirdropPage />;
   if (page === "claim")   return <AirdropClaimPage />;
   if (page === "admin")   return <AirdropAdminPage />;
+  if (page === "vesting") return <VestingPage />;
 
   return (
     <>
       <App />
+
+      {/* Vesting button */}
+      <button
+        onClick={() => { window.location.hash = "#vesting"; }}
+        style={{
+          position: "fixed", bottom: 104, right: 20, zIndex: 1000,
+          background: "rgba(139,92,246,0.15)", border: "2px solid #8b5cf6",
+          color: "#8b5cf6", fontFamily: "var(--font-mono)", fontSize: "7px",
+          padding: "10px 16px", boxShadow: "3px 3px 0 #000", cursor: "pointer",
+          letterSpacing: "0.06em", textTransform: "uppercase" as const,
+        }}
+      >
+        🔒 Vesting
+      </button>
 
       <button
         onClick={() => { window.location.hash = "#airdrop"; }}
