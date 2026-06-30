@@ -28,6 +28,8 @@ export interface PoolState {
   oreBalance:     bigint;
   // lifetime
   totalMined:     bigint;  // oreBalance + lifetime claimed (tracked locally)
+  // global (network-wide, not wallet-specific)
+  globalMinted:   bigint;  // rewardToken.totalSupply() — total ore ever mined by everyone
 }
 
 // ── Lifetime claimed helpers (localStorage) ────────────────────────────────
@@ -59,7 +61,7 @@ function makeInitialPools(): PoolState[] {
     totalStaked: 0n, rewardRate: 0n, periodFinish: 0,
     miningActive: false, rewardDecimals: 18,
     staked: 0n, pendingReward: 0n, liveReward: 0n, allowance: 0n,
-    oreBalance: 0n, totalMined: 0n,
+    oreBalance: 0n, totalMined: 0n, globalMinted: 0n,
   }));
 }
 
@@ -74,6 +76,7 @@ export function useMining() {
   const [ronBalance, setRonBalance]       = useState(0n);
   const [roniteSupply, setRoniteSupply]   = useState(0n);
   const [roniteMaxSupply, setRoniteMaxSupply] = useState(0n);
+  const [activeWallets, setActiveWallets] = useState<number | null>(null);
 
   const browserProviderRef = useRef<BrowserProvider | null>(null);
   const syncRef = useRef<Record<string, { pending: bigint; ts: number }>>({});
@@ -94,8 +97,10 @@ export function useMining() {
             periodFinish: Number(d.periodFinish),
             miningActive: d.miningActive,
             rewardDecimals: d.rewardDecimals,
+            globalMinted: d.globalMinted != null ? BigInt(d.globalMinted) : p.globalMinted,
           };
         }));
+        if (typeof data.activeWallets === "number") setActiveWallets(data.activeWallets);
         return;
       } catch { /* fall through to direct RPC */ }
     }
@@ -108,12 +113,14 @@ export function useMining() {
         const rewardRate   = await staking.rewardRate();
         const periodFinish = await staking.periodFinish();
         const decimals     = await rewardToken.decimals();
+        const globalMinted = await rewardToken.totalSupply();
         setPools(prev => prev.map(p =>
           p.symbol !== pool.symbol ? p : {
             ...p, totalStaked, rewardRate,
             periodFinish: Number(periodFinish),
             miningActive: Date.now() / 1000 < Number(periodFinish),
             rewardDecimals: Number(decimals),
+            globalMinted,
           }
         ));
       } catch (e) { console.warn(`refreshNetwork ${pool.symbol}:`, e); }
@@ -388,7 +395,7 @@ export function useMining() {
   return {
     address, connecting, pendingAction, error,
     pools, roniteBalance, roniteAllowance,
-    ronBalance, roniteSupply, roniteMaxSupply,
+    ronBalance, roniteSupply, roniteMaxSupply, activeWallets,
     connect, buyRonite, approveRonite, stake, withdraw, claim, claimAll, sellOre,
   };
 }
