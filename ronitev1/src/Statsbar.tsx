@@ -106,7 +106,6 @@ export function StatsBar({
           </button>
         </div>
 
-        {/* mini per-ore breakdown */}
         <div className="stats-ore-strip">
           {pools.map(p => {
             const OreIcon = ORE_ICON[p.symbol];
