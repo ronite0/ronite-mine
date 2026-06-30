@@ -6,6 +6,7 @@ import type { PoolState } from "./hooks/useMining";
 import { POOLS } from "./lib/chain";
 import { PixelCatScene } from "./Pixelcatscene";
 import { ORE_ICON } from "./Oreicons";
+import { StatsBar } from "./Statsbar";
 
 // ── Error Modal ────────────────────────────────────────────────────────────
 function ErrorModal({ message, onClose }: { message: string; onClose: () => void }) {
@@ -661,6 +662,8 @@ export default function App() {
       </header>
 
       <main className="content">
+        <StatsBar pools={pools} />
+
         <PixelCatScene pools={pools} />
 
         {/* ── RONITE Supply Bar ──────────────────────────────────────── */}
