@@ -4,11 +4,23 @@ export const RONIN_MAINNET = {
   chainName: "Ronin",
   nativeCurrency: { name: "RON", symbol: "RON", decimals: 18 },
   rpcUrls: ["https://ronin.drpc.org"],
-  blockExplorerUrls: ["https://app.roninchain.com"],
+  blockExplorerUrls: ["https://explorer.roninchain.com"],
 };
 
 export const RONITE_ADDRESS = import.meta.env.VITE_RONITE_TOKEN_ADDRESS as string;
 export const BACKEND_URL    = (import.meta.env.VITE_BACKEND_URL as string) || "";
+
+// ── Price source (GeckoTerminal) ────────────────────────────────────────────
+// RONITE / WRON pool on Ronin. Used for the live TVL→USD estimate and the
+// embedded price chart modal on the landing page.
+export const GECKOTERMINAL_NETWORK      = "ronin";
+export const GECKOTERMINAL_POOL_ADDRESS = "0x591bf4bcb12ca203e2f8510a7c2c63d5a5c97fd4";
+export const GECKOTERMINAL_API_URL =
+  `https://api.geckoterminal.com/api/v2/networks/${GECKOTERMINAL_NETWORK}/pools/${GECKOTERMINAL_POOL_ADDRESS}`;
+export const GECKOTERMINAL_POOL_URL =
+  `https://www.geckoterminal.com/${GECKOTERMINAL_NETWORK}/pools/${GECKOTERMINAL_POOL_ADDRESS}`;
+export const GECKOTERMINAL_EMBED_URL =
+  `${GECKOTERMINAL_POOL_URL}?embed=1&info=0&swaps=1&grayscale=0&light_chart=0&chart_type=price&resolution=30s`;
 
 export interface PoolConfig {
   symbol:             string;
