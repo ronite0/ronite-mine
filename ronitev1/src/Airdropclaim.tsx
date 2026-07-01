@@ -1,4 +1,17 @@
-
+/**
+ * AirdropClaim.tsx — Halaman Claim Airdrop dari RoniteAirdrop.sol
+ *
+ * Terintegrasi penuh dengan:
+ *   - lib/wallet.ts   → connectWallet(), getInjectedProvider()
+ *   - lib/chain.ts    → RONIN_MAINNET, RONITE_ADDRESS
+ *   - lib/format.ts   → shortenAddress(), formatTokenAmount()
+ *
+ * Env yang perlu ditambah ke .env:
+ *   VITE_AIRDROP_CONTRACT_ADDRESS=0x...
+ *
+ * Navigasi:  window.location.hash = "#claim"
+ * Kembali:   window.location.hash = ""  atau "#airdrop"
+ */
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
@@ -11,6 +24,11 @@ import { shortenAddress, formatTokenAmount }    from "./lib/format";
 const AIRDROP_ADDR = import.meta.env.VITE_AIRDROP_CONTRACT_ADDRESS as string | undefined;
 const EXPLORER     = RONIN_MAINNET.blockExplorerUrls[0]; // "https://explorer.roninchain.com"
 
+// Season 1 allocation is fully distributed — force the "ended" state on the
+// frontend regardless of the on-chain isCampaignOpen() flag.
+const AIRDROP_ENDED = true;
+
+/** ABI minimal RoniteAirdrop.sol — hanya fungsi yang dipakai frontend */
 const AIRDROP_ABI = [
   "function allocation(address wallet) view returns (uint256)",
   "function claimed(address wallet) view returns (bool)",
@@ -250,7 +268,7 @@ const STATUS_CFG: Partial<Record<ClaimStatus, {
     borderColor: "var(--danger)", bgColor: "rgba(239,68,68,0.07)",
   },
   campaign_closed: {
-    icon: "⏸", title: "Campaign Not Open / Ended",
+    icon: "⏹", title: "Airdrop Ended",
     borderColor: "#f59e0b", bgColor: "rgba(245,158,11,0.07)",
   },
   error: {
@@ -263,7 +281,7 @@ const STATUS_BODY: Partial<Record<ClaimStatus, (alloc: bigint, err: string | nul
   claimed:         (a) => `${formatTokenAmount(a, 18, 4)} RONITE has been sent to your wallet.`,
   already_claimed: (a) => `${formatTokenAmount(a, 18, 4)} RONITE was already claimed previously.`,
   not_allocated:   ()  => "This wallet is not registered in the Season 1 airdrop. Make sure you have completed all tasks and are included in the snapshot.",
-  campaign_closed: ()  => "The campaign is currently inactive. Follow announcements on Telegram for the opening schedule.",
+  campaign_closed: ()  => "Season 1 allocation has been fully distributed and the claim window is now closed. Follow announcements on Telegram for Season 2.",
   error:           (_, e) => e ?? "An error occurred. Make sure VITE_AIRDROP_CONTRACT_ADDRESS is set in your .env file.",
 };
 
@@ -503,7 +521,7 @@ export function AirdropClaimPage() {
 
     if (d.claimed)           setStatus("already_claimed");
     else if (d.allocation === 0n) setStatus("not_allocated");
-    else if (!d.isOpen)      setStatus("campaign_closed");
+    else if (!d.isOpen || AIRDROP_ENDED) setStatus("campaign_closed");
     else                     setStatus("eligible");
   }, []);
 
@@ -661,7 +679,7 @@ export function AirdropClaimPage() {
         {/* ── Countdown ──────────────────────────────────────────────── */}
         <PixelBox style={{ padding: "16px 18px" }}>
           <SectionLabel>
-            ⏳ {expired ? "Campaign Has Ended" : "Claim Window Closes In"}
+            ⏳ {AIRDROP_ENDED || expired ? "Campaign Has Ended" : "Claim Window Closes In"}
           </SectionLabel>
           <div style={{
             display: "flex", gap: 8, justifyContent: "center",
