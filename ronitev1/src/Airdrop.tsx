@@ -1,4 +1,14 @@
-
+/**
+ * AirdropPage.tsx — Halaman Airdrop Campaign
+ *
+ * Verifikasi on-chain NYATA:
+ *   - buy      : balanceOf(RONITE) > 0
+ *   - s_coal/iron/gold/diamond : stakedBalance(addr, pool) > 0
+ *   - claim    : oreBalance(wallet) > 0 di salah satu pool
+ *   - sell     : roniteBalance naik setelah konfirmasi (proxy: cek oreBalance vs cached)
+ *
+ * Navigasi via hash: window.location.hash = "#airdrop" / ""
+ */
 
 import React, {
   useState, useEffect, useRef, useCallback,
@@ -42,6 +52,11 @@ const AIRDROP_ABI = [
 ];
 
 const SUBMIT_FEE_RON = "0.01"; // RON
+
+// Season 1 allocation is fully distributed — campaign is closed on the frontend
+// regardless of the on-chain isCampaignOpen() flag. Flip back to false to reopen
+// for a future season (once the contract/env is updated for Season 2).
+const AIRDROP_ENDED = true;
 
 const ERC20_ABI_MIN = [
   "function balanceOf(address) view returns (uint256)",
@@ -732,12 +747,12 @@ function SubmitAirdropPanel({
   if (!AIRDROP_CONTRACT_ADDR) return null;
   if (!address) return null;
 
-  const eligible    = earned >= SUBMIT_MIN_EARNED;
+  const eligible    = earned >= SUBMIT_MIN_EARNED && !AIRDROP_ENDED;
   const isSubmitted = airdrop.submitted;
   const taskIdsStr  = completedTasks.map(t => t.id).join(",");
 
   async function handleSubmit() {
-    if (!address || !eligible || submitting || isSubmitted) return;
+    if (!address || !eligible || submitting || isSubmitted || AIRDROP_ENDED) return;
     setTxError(null);
     setSubmitting(true);
     try {
@@ -807,11 +822,13 @@ function SubmitAirdropPanel({
             textShadow: "2px 2px 0 #000",
             marginBottom: 5,
           }}>
-            {isSubmitted ? "✅ SUBMITTED ON-CHAIN" : "📋 SUBMIT FOR AIRDROP"}
+            {isSubmitted ? "✅ SUBMITTED ON-CHAIN" : AIRDROP_ENDED ? "⏹ AIRDROP ENDED" : "📋 SUBMIT FOR AIRDROP"}
           </div>
           <div style={{ fontSize: "6px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", lineHeight: 2 }}>
             {isSubmitted
               ? "Your submission is recorded on Ronin mainnet. Admin will set your RONITE allocation soon."
+              : AIRDROP_ENDED
+              ? "Season 1 allocation has been fully distributed. New submissions are closed."
               : eligible
               ? `Pay 0.01 RON fee → your tasks are recorded on-chain → admin sets your allocation.`
               : `Earn at least ${SUBMIT_MIN_EARNED} RONITE (Digger tier) to unlock submission.`}
@@ -941,15 +958,18 @@ function SubmitAirdropPanel({
         </div>
       )}
 
-      {/* Not eligible hint */}
-      {!eligible && (
+      {/* Not eligible / ended hint */}
+      {!eligible && !isSubmitted && (
         <div style={{
-          background: "rgba(148,163,184,0.06)", border: "2px dashed var(--border)",
+          background: AIRDROP_ENDED ? "rgba(239,68,68,0.06)" : "rgba(148,163,184,0.06)",
+          border: `2px dashed ${AIRDROP_ENDED ? "var(--danger)" : "var(--border)"}`,
           padding: "10px 13px",
         }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "6px", color: "var(--text-muted)", lineHeight: 2 }}>
-            🔒 Need <span style={{ color: "var(--ore)" }}>{SUBMIT_MIN_EARNED - earned} more RONITE</span> to unlock.
-            Complete on-chain tasks for the fastest points.
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "6px", color: AIRDROP_ENDED ? "var(--danger)" : "var(--text-muted)", lineHeight: 2 }}>
+            {AIRDROP_ENDED
+              ? "⏹ Season 1 has ended and the full allocation has been distributed. Stay tuned for Season 2 announcements."
+              : <>🔒 Need <span style={{ color: "var(--ore)" }}>{SUBMIT_MIN_EARNED - earned} more RONITE</span> to unlock.
+              Complete on-chain tasks for the fastest points.</>}
           </div>
         </div>
       )}
@@ -1040,8 +1060,8 @@ function ClaimPanel({
   const notConnected   = !address;
   const notAllocated   = !airdrop.loading && airdrop.allocation === 0n;
   const alreadyClaimed = airdrop.claimed;
-  const notOpen        = !airdrop.campaignOpen;
-  const canClaim       = !notConnected && !notAllocated && !alreadyClaimed && airdrop.campaignOpen;
+  const notOpen        = !airdrop.campaignOpen || AIRDROP_ENDED;
+  const canClaim       = !notConnected && !notAllocated && !alreadyClaimed && airdrop.campaignOpen && !AIRDROP_ENDED;
 
   const borderColor = alreadyClaimed ? "var(--success)"
     : canClaim      ? "var(--ore)"
@@ -1069,11 +1089,13 @@ function ClaimPanel({
             color: alreadyClaimed ? "var(--success)" : "var(--ore)",
             textShadow: "2px 2px 0 #000", marginBottom: 4,
           }}>
-            {alreadyClaimed ? "✅ AIRDROP CLAIMED!" : "🎁 CLAIM YOUR AIRDROP"}
+            {alreadyClaimed ? "✅ AIRDROP CLAIMED!" : AIRDROP_ENDED ? "⏹ AIRDROP ENDED" : "🎁 CLAIM YOUR AIRDROP"}
           </div>
           <div style={{ fontSize: "6px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
             {alreadyClaimed
               ? "Tokens have been sent to your wallet."
+              : AIRDROP_ENDED
+              ? "Season 1 allocation is fully distributed. Claiming is closed."
               : "Send your earned RONITE directly from the contract to your wallet."}
           </div>
         </div>
@@ -1115,11 +1137,14 @@ function ClaimPanel({
       )}
       {!airdrop.loading && !notConnected && !notAllocated && notOpen && !alreadyClaimed && (
         <div style={{
-          background: "rgba(96,165,250,0.08)", border: "2px solid var(--accent)",
+          background: AIRDROP_ENDED ? "rgba(239,68,68,0.08)" : "rgba(96,165,250,0.08)",
+          border: `2px solid ${AIRDROP_ENDED ? "var(--danger)" : "var(--accent)"}`,
           padding: "10px 13px", fontFamily: "var(--font-mono)", fontSize: "6.5px",
-          color: "var(--ronin-sky)", boxShadow: "2px 2px 0 #000",
+          color: AIRDROP_ENDED ? "var(--danger)" : "var(--ronin-sky)", boxShadow: "2px 2px 0 #000",
         }}>
-          🕐 Campaign not yet open. Your allocation of {allocFormatted.toLocaleString()} RONITE is reserved — claim opens when the campaign starts.
+          {AIRDROP_ENDED
+            ? `⏹ Season 1 has ended and the allocation pool is fully distributed. Your reserved ${allocFormatted.toLocaleString()} RONITE can no longer be claimed on this campaign.`
+            : `🕐 Campaign not yet open. Your allocation of ${allocFormatted.toLocaleString()} RONITE is reserved — claim opens when the campaign starts.`}
         </div>
       )}
       {airdrop.error && (
@@ -1464,12 +1489,8 @@ export function AirdropPage() {
   const airdrop = useAirdropStatus(address, airdropRefresh);
   const poolStats = usePoolStats(airdropRefresh);
 
-  const [tasks, setTasks]         = useState<Task[]>(loadTasks);
-  const [tab, setTab]             = useState<Category>("social");
-  const [burst, setBurst]         = useState(false);
-  const [copied, setCopied]       = useState(false);
-  const [verifyingAll, setVerifyingAll] = useState(false);
-  const [verifyError, setVerifyError]   = useState<string | null>(null);
+  const [tasks]    = useState<Task[]>(loadTasks);
+  const [burst, setBurst] = useState(false);
   const burstRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Campaign end — 30 September 2026 23:59:59 WIB (UTC+7) = 30 Sep 2026 16:59:59 UTC
@@ -1482,157 +1503,12 @@ export function AirdropPage() {
   const tier      = getTier(earned);
   const nextTier  = getNextTier(earned);
 
-  const refLink = address
-    ? `https://ronite.fun/#airdrop?ref=${address.slice(0, 8)}`
-    : "Connect wallet to generate your link";
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   function triggerBurst() {
     setBurst(true);
     if (burstRef.current) clearTimeout(burstRef.current);
     burstRef.current = setTimeout(() => setBurst(false), 850);
-  }
-
-  // ── Single task on-chain verify ──────────────────────────────────────────────
-
-  async function handleVerify(taskId: string) {
-    if (!address) return;
-    setVerifyError(null);
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, verifying: true } : t));
-    try {
-      const ok = await verifyOnChain(taskId, address);
-      if (ok) {
-        setTasks(prev => {
-          const next = prev.map(t =>
-            t.id === taskId ? { ...t, completed: true, verifying: false } : t,
-          );
-          persistTasks(next);
-          return next;
-        });
-        triggerBurst();
-      } else {
-        setVerifyError(`Task "${INITIAL_TASKS.find(t => t.id === taskId)?.title}" not yet completed on-chain. Complete it first, then verify again.`);
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, verifying: false } : t));
-      }
-    } catch {
-      setVerifyError("RPC error — try again in a moment.");
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, verifying: false } : t));
-    }
-  }
-
-  // ── Verify all on-chain tasks ────────────────────────────────────────────────
-
-  async function handleVerifyAll() {
-    if (!address || verifyingAll) return;
-    setVerifyError(null);
-    setVerifyingAll(true);
-
-    // snapshot which ids are already done *right now* (avoids stale closure)
-    const alreadyDone = new Set(
-      tasks.filter(t => t.completed).map(t => t.id),
-    );
-    const ids = Array.from(ONCHAIN_VERIFIABLE).filter(id => !alreadyDone.has(id));
-
-    let newlyCompleted = 0;
-    for (const id of ids) {
-      // mark this task as verifying
-      setTasks(prev => prev.map(t => t.id === id ? { ...t, verifying: true } : t));
-      try {
-        const ok = await verifyOnChain(id, address);
-        if (ok) {
-          // use functional update so we always write to latest state
-          setTasks(prev => {
-            const next = prev.map(t =>
-              t.id === id ? { ...t, completed: true, verifying: false } : t,
-            );
-            persistTasks(next);
-            return next;
-          });
-          newlyCompleted++;
-          triggerBurst();
-        } else {
-          setTasks(prev => prev.map(t => t.id === id ? { ...t, verifying: false } : t));
-        }
-      } catch {
-        setTasks(prev => prev.map(t => t.id === id ? { ...t, verifying: false } : t));
-      }
-    }
-
-    setVerifyingAll(false);
-    if (newlyCompleted === 0) {
-      setVerifyError("No new tasks found on-chain. Make sure you've completed them on the Mining page first.");
-    }
-  }
-
-  // ── Manual done (social / sell / referral) — 1.5s submit delay ────────────
-
-  // ── Verify TX hash on-chain (untuk task "sell") ──────────────────────────
-  async function verifyTxHash(txHash: string, expectedFrom: string): Promise<{ ok: boolean; reason: string }> {
-    try {
-      const tx = await readProvider.getTransaction(txHash);
-      if (!tx) return { ok: false, reason: "TX tidak ditemukan di Ronin mainnet. Pastikan hash benar." };
-      if (tx.from.toLowerCase() !== expectedFrom.toLowerCase())
-        return { ok: false, reason: `TX bukan dari wallet kamu (dari: ${tx.from.slice(0,8)}…).` };
-      const receipt = await readProvider.getTransactionReceipt(txHash);
-      if (!receipt) return { ok: false, reason: "TX belum dikonfirmasi. Tunggu beberapa saat lalu coba lagi." };
-      if (receipt.status === 0) return { ok: false, reason: "TX gagal (reverted). Submit TX sell yang berhasil." };
-      return { ok: true, reason: "" };
-    } catch (e: any) {
-      return { ok: false, reason: e?.message ?? "RPC error saat verifikasi TX." };
-    }
-  }
-
-  async function handleManualDone(id: string, proof: string) {
-    const task = tasks.find(t => t.id === id);
-    if (!task || task.completed || task.verifying) return;
-
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, verifying: true } : t));
-
-    // ── Task "sell": verifikasi TX hash via RPC ──────────────────────────
-    if (id === "sell" && address) {
-      const { ok, reason } = await verifyTxHash(proof.trim(), address);
-      if (!ok) {
-        setVerifyError(`⛔ TX tidak valid: ${reason}`);
-        setTasks(prev => prev.map(t => t.id === id ? { ...t, verifying: false } : t));
-        return;
-      }
-    } else {
-      // Social / referral — 1.5s delay (manual admin check)
-      await new Promise<void>(resolve => setTimeout(resolve, 1500));
-    }
-
-    // Save proof to localStorage for admin reference
-    try {
-      const proofStore = JSON.parse(localStorage.getItem("ronite_proofs") ?? "{}");
-      proofStore[id] = { proof, address: address ?? "anon", ts: Date.now() };
-      localStorage.setItem("ronite_proofs", JSON.stringify(proofStore));
-    } catch { /* ignore */ }
-
-    setTasks(prev => {
-      const next = prev.map(t =>
-        t.id === id ? { ...t, completed: true, verifying: false } : t,
-      );
-      persistTasks(next);
-      return next;
-    });
-    triggerBurst();
-  }
-
-  function copyRef() {
-    if (!address) return;
-    navigator.clipboard.writeText(refLink).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  const visibleTasks = tasks.filter(t => t.category === tab);
-  const onchainTasks = tasks.filter(t => t.category === "onchain");
-  const pendingOnchain = onchainTasks.filter(t => !t.completed).length;
-
-  function handleTabChange(cat: Category) {
-    setTab(cat);
-    setVerifyError(null);
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -1753,13 +1629,23 @@ export function AirdropPage() {
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <PixelBox style={{ padding: "16px 18px" }}>
-            <SectionLabel>⏱ Campaign Ends In</SectionLabel>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <ClockBlock label="days" value={d} />
-              <ClockBlock label="hrs"  value={h} />
-              <ClockBlock label="min"  value={m} />
-              <ClockBlock label="sec"  value={s} />
-            </div>
+            <SectionLabel>{AIRDROP_ENDED ? "⏹ Campaign Status" : "⏱ Campaign Ends In"}</SectionLabel>
+            {AIRDROP_ENDED ? (
+              <div style={{
+                fontFamily: "var(--font-display)", fontSize: "13px",
+                color: "var(--danger)", textShadow: "2px 2px 0 #000",
+                padding: "10px 0",
+              }}>
+                ENDED — allocation fully distributed
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <ClockBlock label="days" value={d} />
+                <ClockBlock label="hrs"  value={h} />
+                <ClockBlock label="min"  value={m} />
+                <ClockBlock label="sec"  value={s} />
+              </div>
+            )}
           </PixelBox>
 
           <PixelBox style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1854,155 +1740,6 @@ export function AirdropPage() {
                 </div>
               );
             })}
-          </div>
-        </PixelBox>
-
-        {/* Referral */}
-        <PixelBox style={{ padding: "16px 18px", borderColor: "var(--ronin-purple)" }}>
-          <div style={{
-            display: "flex", justifyContent: "space-between",
-            alignItems: "flex-start", flexWrap: "wrap", gap: 8, marginBottom: 12,
-          }}>
-            <div>
-              <div style={{
-                fontFamily: "var(--font-mono)", fontSize: "8px",
-                color: "var(--ronin-purple)", marginBottom: 4,
-              }}>
-                👥 Your Referral Link
-              </div>
-              <div style={{ fontSize: "6px", color: "var(--text-muted)" }}>
-                Refer friends to stake RONITE and earn +1 RONITE per referral task once verified by admin.
-              </div>
-            </div>
-            <span style={{
-              fontFamily: "var(--font-mono)", fontSize: "6px", color: "var(--ronin-purple)",
-              background: "rgba(168,85,247,0.12)", border: "1px solid var(--ronin-purple)",
-              padding: "3px 8px", boxShadow: "1px 1px 0 #000",
-            }}>
-              +1 RONITE / task
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{
-              flex: 1, background: "var(--ronin-dark)", border: "2px solid var(--border)",
-              padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: "6.5px",
-              color: address ? "var(--text)" : "var(--text-muted)",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {refLink}
-            </div>
-            <button
-              onClick={copyRef}
-              disabled={!address}
-              style={{
-                background: copied ? "rgba(34,197,94,0.14)" : "transparent",
-                border: `2px solid ${copied ? "var(--success)" : "var(--ronin-purple)"}`,
-                color: copied ? "var(--success)" : "var(--ronin-purple)",
-                fontFamily: "var(--font-mono)", fontSize: "7px",
-                padding: "8px 14px",
-                cursor: address ? "pointer" : "not-allowed",
-                boxShadow: "var(--shadow-pixel-sm)", whiteSpace: "nowrap",
-                opacity: address ? 1 : 0.5,
-              }}
-            >
-              {copied ? "✅ Copied!" : "📋 Copy"}
-            </button>
-          </div>
-        </PixelBox>
-
-        {/* Task Board */}
-        <PixelBox style={{ overflow: "hidden" }}>
-          {/* Tabs */}
-          <div style={{
-            display: "flex", borderBottom: "2px solid var(--border)",
-            background: "var(--ronin-dark)",
-          }}>
-            {(["social", "onchain", "referral"] as Category[]).map(cat => (
-              <button
-                key={cat}
-                onClick={() => handleTabChange(cat)}
-                style={{
-                  flex: 1, background: tab === cat ? "var(--surface)" : "transparent",
-                  border: "none",
-                  borderBottom: `2px solid ${tab === cat ? "var(--accent)" : "transparent"}`,
-                  borderRight: "1px solid var(--border)",
-                  color: tab === cat ? "var(--accent)" : "var(--text-muted)",
-                  fontFamily: "var(--font-mono)", fontSize: "6px",
-                  padding: "10px 6px", cursor: "pointer",
-                  textTransform: "uppercase" as const, letterSpacing: "0.08em",
-                }}
-              >
-                {CAT_LABELS[cat]}
-                {cat === "onchain" && pendingOnchain > 0 && (
-                  <span style={{
-                    marginLeft: 6, background: "var(--accent)",
-                    color: "#fff", fontFamily: "var(--font-mono)",
-                    fontSize: "5.5px", padding: "1px 5px",
-                    boxShadow: "1px 1px 0 #000",
-                  }}>
-                    {pendingOnchain}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Verify all bar — only on onchain tab */}
-          {tab === "onchain" && (
-            <div style={{ padding: "12px 16px 0" }}>
-              <VerifyAllBar
-                address={address}
-                onVerifyAll={handleVerifyAll}
-                verifying={verifyingAll}
-              />
-            </div>
-          )}
-
-          {/* Verify error */}
-          {verifyError && tab === "onchain" && (
-            <div style={{
-              margin: "10px 16px 0",
-              padding: "10px 13px",
-              background: "rgba(239,68,68,0.08)",
-              border: "2px solid var(--danger)",
-              boxShadow: "var(--shadow-pixel-sm)",
-              fontFamily: "var(--font-mono)", fontSize: "6.5px",
-              color: "var(--danger)", lineHeight: 2,
-              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-              gap: 10,
-            }}>
-              <span>⚠ {verifyError}</span>
-              <button
-                onClick={() => setVerifyError(null)}
-                style={{
-                  background: "transparent", border: "none",
-                  color: "var(--danger)", cursor: "pointer", fontSize: "10px", flexShrink: 0,
-                }}
-              >✕</button>
-            </div>
-          )}
-
-          {/* Tasks list */}
-          <div style={{ padding: "12px 16px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {!address && (
-              <div style={{
-                textAlign: "center", padding: "20px",
-                fontFamily: "var(--font-mono)", fontSize: "7px",
-                color: "var(--text-muted)", background: "var(--ronin-dark)",
-                border: "2px dashed var(--border)",
-              }}>
-                🔒 Connect wallet to track &amp; verify tasks
-              </div>
-            )}
-            {visibleTasks.map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                address={address}
-                onVerify={handleVerify}
-                onManualDone={handleManualDone}
-              />
-            ))}
           </div>
         </PixelBox>
 
